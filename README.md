@@ -1,24 +1,60 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CashCare
 
-## Getting Started
+### Contributors:
 
-First, run the development server:
+- Sri Aishwarya
+- Sahil Joshi
+- Shubham Karne
+- Clint George
+
+## Overview of Steps to Get Started
+
+1. Fork the project
+2. Create a clone of the project (Using git clone)
+3. Create a branch (Using git checkout -b "branch_name")
+4. Open VS Code and start working on the project
+5. Push the code to the github (Using git add, commit, push)
+6. Raise a Pull Request
+
+## 1. Fork The Project
+
+First, open the repository and then click on the fork repository option present on the top right corner of the page:
+
+## 2. Clone The Project
+
+Open Command line interface (CLI) and then type:
 
 ```bash
+cd Desktop
+# Set the location where you want to save the file
+git clone repo_link
+# Type the command below
+# git clone https://github.com/iamclintgeorge/CashCare.git
+```
+
+## 3. Create a Branch
+
+```bash
+git checkout -b "branch_name"
+# Branch name should be related to what you working on. Example, branch name may look like "feature/header"
+```
+
+## 4. Start working on the Project
+
+1. Open VS Code
+2. Enter ctrl+shift+` or simply open the terminal window on your VS Code
+3. type,
+
+```bash
+npm install
+# This is to install dependencies
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# This will open up the website on your local server
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
 ## Learn More
 
@@ -27,12 +63,4 @@ To learn more about Next.js, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-# CashCare
+Additionally, I will be adding more Info later.
