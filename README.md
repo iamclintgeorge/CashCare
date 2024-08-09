@@ -2,8 +2,8 @@
 
 ### Contributors:
 
-- Sri Aishwarya
 - Sahil Joshi
+- Sri Aishwarya
 - Shubham Karne
 - Clint George
 
