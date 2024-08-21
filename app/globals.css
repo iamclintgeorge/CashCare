@@ -31,3 +31,41 @@ body {
     text-wrap: balance;
   }
 }
+.header{
+  width: 100;
+  min-height: 100vh;
+  padding: 10px 8%;
+}
+.ul{
+  margin: 10px 20px;
+  display: inline-block;
+}
+.divul{
+  list-style: none;
+  width: 100%;
+  text-align: center;
+  padding-left: 0px;
+}
+
+.button:hover{
+   
+   
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px; 
+    color: black; 
+    background-color: rgba(83, 4, 94, 0.263); 
+    border: 2px solid rgba(83, 4, 94, 0.263); 
+    border-radius: 50px;
+    cursor: pointer; 
+    outline: none; 
+    position: relative;
+    transition: 0.2s;
+    overflow: hidden;
+    
+  }
+
+
+
+
