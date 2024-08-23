@@ -8,6 +8,3 @@ export default function Home() {
     <main className="flex min-h-screen flex-col justify-between p-24 bg-white m-0 p-0">
       <Herosec />
       <Whycashcare />
-    </main>
-  );
-}

@@ -2,8 +2,8 @@
 
 ### Contributors:
 
-- Sri Aishwarya
 - Sahil Joshi
+- Sri Aishwarya
 - Shubham Karne
 - Clint George
 
@@ -28,7 +28,7 @@ Open Command line interface (CLI) and then type:
 cd Desktop
 # Set the location where you want to save the file
 git clone repo_link
-# Type the command below
+# Type the command given below
 # git clone https://github.com/iamclintgeorge/CashCare.git
 ```
 
