@@ -66,6 +66,61 @@ body {
     
   }
 
+  /*login page*/
+  .input-group{
+    position: relative;
+  
+  
+  }
+  .input{
+  
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+    outline: none;
+    border: 1px solid #04AA6D;
+  }
+  
+  .placeholder{
+  
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 14px;
+    padding: 0px 10px;
+    color: #666;
+    transition: 0.3s;
+    pointer-events: none;
+  }
+  
+  .input:focus + .placeholder{
+  top: -0.5px;
+  color: #04AA6D ;
+  background-color: #fff;
+    
+  }
+  .b{
+    padding: 10px;
+  }
+  
+  body{
+    background-color: #c9d6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction:column ;
+    height: 100vh;;
+    
+  }
+  .container{
+    align-items: center;
+    justify-content: center;
+    border: solid black;
+    height: 100px;
+    width: 200px;
+  
+  }
 
 
 
