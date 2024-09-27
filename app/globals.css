@@ -104,15 +104,14 @@ body {
     padding: 10px;
   }
   
-  body{
+  /* body{
     background-color: #c9d6ff;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction:column ;
-    height: 100vh;;
-    
-  }
+    height: 100vh;;   
+  } */
   .container{
     align-items: center;
     justify-content: center;
