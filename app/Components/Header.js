@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 const Header = () => {
   return (
@@ -16,7 +17,9 @@ const Header = () => {
           <li>CONTACT US</li>
         </ul>
         <ul className="flex gap-5 items-center text-xs tracking-widest">
-          <li className="border rounded-2xl px-5 py-2 border-black">SIGN IN</li>
+          <li className="border rounded-2xl px-5 py-2 border-black">
+            <Link href="/Login">SIGN IN</Link>
+          </li>
           <li>EN</li>
         </ul>
       </div>
