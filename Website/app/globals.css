@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+.header{
+  width: 100;
+  min-height: 100vh;
+  padding: 10px 8%;
+}
+.ul{
+  margin: 10px 20px;
+  display: inline-block;
+}
+.divul{
+  list-style: none;
+  width: 100%;
+  text-align: center;
+  padding-left: 0px;
+}
+
+.button:hover{
+   
+   
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px; 
+    color: black; 
+    background-color: rgba(83, 4, 94, 0.263); 
+    border: 2px solid rgba(83, 4, 94, 0.263); 
+    border-radius: 50px;
+    cursor: pointer; 
+    outline: none; 
+    position: relative;
+    transition: 0.2s;
+    overflow: hidden;
+    
+  }
+
+  /*login page*/
+  .input-group{
+    position: relative;
+  
+  
+  }
+  .input{
+  
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+    outline: none;
+    border: 1px solid #04AA6D;
+  }
+  
+  .placeholder{
+  
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 14px;
+    padding: 0px 10px;
+    color: #666;
+    transition: 0.3s;
+    pointer-events: none;
+  }
+  
+  .input:focus + .placeholder{
+  top: -0.5px;
+  color: #04AA6D ;
+  background-color: #fff;
+    
+  }
+  .b{
+    padding: 10px;
+  }
+  
+  /* body{
+    background-color: #c9d6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction:column ;
+    height: 100vh;;   
+  } */
+  .container{
+    align-items: center;
+    justify-content: center;
+    border: solid black;
+    height: 100px;
+    width: 200px;
+  
+  }
+
