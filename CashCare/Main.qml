@@ -1,13 +1,38 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window 2.0
+import QtQuick.Controls 2.15
 
-Window {
+ApplicationWindow {
     id: root
     width: 640
     height: 480
     visible: true
     title: qsTr("CashCare - Securing Transactions, one at a time")
     color: "#EAEAEA"
+    // menuBar: MenuBar {
+    //     background: Rectangle {
+    //         color: "#F9F9F9"
+    //     }
+    //         Menu {
+    //             title: qsTr("File")
+    //             MenuItem {
+    //                 contentItem: Text {
+    //                     text: "Exit"
+    //                     color: "red"  // Set text color
+    //                 }
+    //                 onTriggered: Qt.quit();
+    //                 background: Rectangle {
+    //                     color: "#F9F9F9"
+    //                 }
+
+    //             }
+    //             MenuItem {
+    //                 text: "File - Item 2"
+    //                 onTriggered: statusLabel.text = "File - Item 2 Triggered"
+    //             }
+    //         }
+    // }
         Rectangle {
             id: navbardiv
             anchors.top: parent.top
@@ -31,6 +56,10 @@ Window {
                         font.family: "Inter"
                         font.pointSize: 10
                         Layout.leftMargin: 1
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: menu.visible = !menu.visible
+                        }
                     }
                     Text {
                         id: edit
@@ -59,6 +88,37 @@ Window {
                 }
             }
             }
+            Rectangle {
+                       id: menu
+                       width: 150
+                       height: 100
+                       color: "red"
+                       visible: false
+                       anchors.top: file.bottom
+                       anchors.left: file.left
+                       anchors.topMargin: 5
+                       anchors.leftMargin: 0
+
+                       ColumnLayout {
+                           spacing: 10
+
+                           Rectangle {
+                               implicitWidth: parent.width
+                               implicitHeight: 30
+                               color: "#F9F9F9"
+                               border.color: "#E6E6E6"
+                               Text {
+                                   anchors.centerIn: parent
+                                   text: "Exit"
+                                   color: "black"
+                                   MouseArea {
+                                       anchors.fill: parent
+                                       onClicked: Qt.quit()
+                                   }
+                               }
+                           }
+                       }
+                   }
             Rectangle{
                 id: navbarborder
                 anchors.bottom: navbardiv.bottom
@@ -117,5 +177,11 @@ Window {
             anchors.left: parent.left
             anchors.right: parent.right
             height: 20
+            MouseArea{
+                anchors.fill: parent
+            onClicked:{
+                console.log("Button was clicked")
+            }
+            }
         }
 }
