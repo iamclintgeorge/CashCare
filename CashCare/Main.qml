@@ -5,34 +5,11 @@ import QtQuick.Controls 2.15
 
 ApplicationWindow {
     id: root
-    width: 640
-    height: 480
+    width: 1020
+    height: 720
     visible: true
     title: qsTr("CashCare - Securing Transactions, one at a time")
     color: "#EAEAEA"
-    // menuBar: MenuBar {
-    //     background: Rectangle {
-    //         color: "#F9F9F9"
-    //     }
-    //         Menu {
-    //             title: qsTr("File")
-    //             MenuItem {
-    //                 contentItem: Text {
-    //                     text: "Exit"
-    //                     color: "red"  // Set text color
-    //                 }
-    //                 onTriggered: Qt.quit();
-    //                 background: Rectangle {
-    //                     color: "#F9F9F9"
-    //                 }
-
-    //             }
-    //             MenuItem {
-    //                 text: "File - Item 2"
-    //                 onTriggered: statusLabel.text = "File - Item 2 Triggered"
-    //             }
-    //         }
-    // }
         Rectangle {
             id: navbardiv
             anchors.top: parent.top
@@ -47,9 +24,12 @@ ApplicationWindow {
                 anchors.margins: 20
 
             RowLayout{
+                anchors.fill: parent
                 Layout.topMargin: 50
+                Layout.fillWidth: true
                 RowLayout {
                     id: leftnavbar
+                    Layout.fillWidth: true
                     Text {
                         id: file
                         text: qsTr("File")
@@ -64,7 +44,7 @@ ApplicationWindow {
                     Text {
                         id: edit
                         text: qsTr("Edit")
-                        font.family: "Inter"
+                        font.family: "Arial"
                         font.pointSize: 10
                         Layout.leftMargin: 11
                     }
@@ -83,10 +63,32 @@ ApplicationWindow {
                         Layout.leftMargin: 11
                     }
                 }
+                Item {
+                    id: centernavbar
+                    Layout.fillWidth: true
+                }
                 RowLayout {
                     id: rightnavbar
-                }
-            }
+                    Layout.alignment: Qt.AlignRight
+                    Text{
+                        text: qsTr("Settings")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        Layout.rightMargin: 10
+                    }
+                    Text{
+                        text: qsTr("Notification")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        Layout.rightMargin: 10
+                    }
+                    Text{
+                        text: qsTr("Login")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        Layout.rightMargin: 10
+                    }
+                    }
             }
             Rectangle {
                        id: menu
@@ -119,6 +121,7 @@ ApplicationWindow {
                            }
                        }
                    }
+            }
             Rectangle{
                 id: navbarborder
                 anchors.bottom: navbardiv.bottom
@@ -139,7 +142,7 @@ ApplicationWindow {
                 Text {
                     id: dashboard
                     text: qsTr("Dashboard")
-                    font.family: "Roboto"
+                    font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
@@ -147,7 +150,7 @@ ApplicationWindow {
                 Text {
                     id: ruleset
                     text: qsTr("Firewall ruleset")
-                    font.family: "Roboto"
+                    font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
@@ -155,7 +158,7 @@ ApplicationWindow {
                 Text {
                     id: networks
                     text: qsTr("Check networks")
-                    font.family: "Roboto"
+                    font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
@@ -163,7 +166,7 @@ ApplicationWindow {
                 Text {
                     id: logs
                     text: qsTr("Log history")
-                    font.family: "Roboto"
+                    font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
@@ -176,12 +179,52 @@ ApplicationWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            height: 20
+            height: 25
             MouseArea{
                 anchors.fill: parent
             onClicked:{
                 console.log("Button was clicked")
             }
+            }
+            Rectangle{
+            anchors.fill: parent
+            RowLayout{
+            anchors.fill: parent
+            RowLayout{
+                Layout.leftMargin: 20
+            Text {
+                text: qsTr("Layout")
+                font.family: "Arial"
+                font.pointSize: 8
+                color: "#757575"
+            }
+            Text {
+                text: qsTr("Connected to Internet")
+                font.family: "Arial"
+                font.pointSize: 8
+                color: "#757575"
+                Layout.leftMargin: 10
+            }
+            }
+            RowLayout{
+                Layout.alignment: Qt.AlignRight
+                Layout.rightMargin: 20
+                Text {
+                    text: qsTr("Help")
+                    font.family: "Arial"
+                    font.pointSize: 8
+                    color: "#757575"
+                }
+            }
+            }
+            }
+            Rectangle{
+                id: statusbarborder
+                anchors.top: statusbardiv.top
+                anchors.left: statusbardiv.left
+                anchors.right: statusbardiv.right
+                height: 1
+                color: "#E6E6E6"
             }
         }
 }
