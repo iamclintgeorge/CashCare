@@ -27,7 +27,7 @@ ApplicationWindow {
 
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 20
+                anchors.margins: 15
                 color: "#F9F9F9"
 
                 RowLayout {
@@ -38,6 +38,7 @@ ApplicationWindow {
                     RowLayout {
                         id: leftnavbar
                         spacing: 11
+                        Layout.leftMargin: 10
 
                         Text {
                             id: file
@@ -77,6 +78,7 @@ ApplicationWindow {
                     // Right navbar items
                     RowLayout {
                         spacing: 10
+                        Layout.rightMargin: 15
 
                         Text {
                             text: qsTr("Settings")
@@ -117,7 +119,7 @@ ApplicationWindow {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 30
+                            implicitHeight: 30
                             color: "#F9F9F9"
                             border.color: "#E6E6E6"
 
