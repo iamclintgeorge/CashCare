@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Window 2.0
-import QtQuick.Controls 2.15
+import QtQuick.Window
+import QtQuick.Controls
 
 ApplicationWindow {
     id: root
@@ -10,221 +10,250 @@ ApplicationWindow {
     visible: true
     title: qsTr("CashCare - Securing Transactions, one at a time")
     color: "#EAEAEA"
+
+    Rectangle {
+        id: mainContent
+        anchors.fill: parent
+        color: "#EAEAEA"
+
+        // Navbar
         Rectangle {
             id: navbardiv
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            Layout.fillWidth: true
-            implicitHeight: 50
+            height: 50
             color: "#F9F9F9"
+
             Rectangle {
-                color: "#F9F9F9"
                 anchors.fill: parent
                 anchors.margins: 20
+                color: "#F9F9F9"
 
-            RowLayout{
-                anchors.fill: parent
-                Layout.topMargin: 50
-                Layout.fillWidth: true
                 RowLayout {
-                    id: leftnavbar
-                    Layout.fillWidth: true
-                    Text {
-                        id: file
-                        text: qsTr("File")
-                        font.family: "Inter"
-                        font.pointSize: 10
-                        Layout.leftMargin: 1
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: menu.visible = !menu.visible
+                    anchors.fill: parent
+                    spacing: 10
+
+                    // Left navbar items
+                    RowLayout {
+                        id: leftnavbar
+                        spacing: 11
+
+                        Text {
+                            id: file
+                            text: qsTr("File")
+                            font.family: "Inter"
+                            font.pointSize: 10
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: menu.visible = !menu.visible
+                            }
+                        }
+
+                        Text {
+                            text: qsTr("Edit")
+                            font.family: "Arial"
+                            font.pointSize: 10
+                        }
+
+                        Text {
+                            text: qsTr("View")
+                            font.family: "Arial"
+                            font.pointSize: 10
+                        }
+
+                        Text {
+                            text: qsTr("Help")
+                            font.family: "Arial"
+                            font.pointSize: 10
                         }
                     }
-                    Text {
-                        id: edit
-                        text: qsTr("Edit")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.leftMargin: 11
+
+                    // Center spacer
+                    Item {
+                        Layout.fillWidth: true
                     }
-                    Text {
-                        id: view
-                        text: qsTr("View")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.leftMargin: 11
-                    }
-                    Text {
-                        id: help
-                        text: qsTr("Help")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.leftMargin: 11
+
+                    // Right navbar items
+                    RowLayout {
+                        spacing: 10
+
+                        Text {
+                            text: qsTr("Settings")
+                            font.family: "Arial"
+                            font.pointSize: 10
+                        }
+
+                        Text {
+                            text: qsTr("Notification")
+                            font.family: "Arial"
+                            font.pointSize: 10
+                        }
+
+                        Button {
+                            text: qsTr("Login")
+                            font.family: "Arial"
+                            font.pointSize: 10
+                        }
                     }
                 }
-                Item {
-                    id: centernavbar
-                    Layout.fillWidth: true
+
+                // File menu popup
+                Rectangle {
+                    id: menu
+                    width: 150
+                    height: 100
+                    visible: false
+                    color: "#F9F9F9"
+                    border.color: "#E6E6E6"
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.topMargin: 30
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 5
+                        spacing: 5
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 30
+                            color: "#F9F9F9"
+                            border.color: "#E6E6E6"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Exit"
+                                color: "black"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: Qt.quit()
+                            }
+                        }
+                    }
                 }
-                RowLayout {
-                    id: rightnavbar
-                    Layout.alignment: Qt.AlignRight
-                    Text{
-                        text: qsTr("Settings")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.rightMargin: 10
-                    }
-                    Text{
-                        text: qsTr("Notification")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.rightMargin: 10
-                    }
-                    Text{
-                        text: qsTr("Login")
-                        font.family: "Arial"
-                        font.pointSize: 10
-                        Layout.rightMargin: 10
-                    }
-                    }
             }
+
+            // Navbar bottom border
             Rectangle {
-                       id: menu
-                       width: 150
-                       height: 100
-                       color: "red"
-                       visible: false
-                       anchors.top: file.bottom
-                       anchors.left: file.left
-                       anchors.topMargin: 5
-                       anchors.leftMargin: 0
-
-                       ColumnLayout {
-                           spacing: 10
-
-                           Rectangle {
-                               implicitWidth: parent.width
-                               implicitHeight: 30
-                               color: "#F9F9F9"
-                               border.color: "#E6E6E6"
-                               Text {
-                                   anchors.centerIn: parent
-                                   text: "Exit"
-                                   color: "black"
-                                   MouseArea {
-                                       anchors.fill: parent
-                                       onClicked: Qt.quit()
-                                   }
-                               }
-                           }
-                       }
-                   }
-            }
-            Rectangle{
-                id: navbarborder
-                anchors.bottom: navbardiv.bottom
-                anchors.left: navbardiv.left
-                anchors.right: navbardiv.right
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
                 height: 1
                 color: "#E6E6E6"
             }
-    }
-        Rectangle{
+        }
+
+        // Sidebar
+        Rectangle {
             id: sidebardiv
             anchors.top: navbardiv.bottom
             anchors.bottom: statusbardiv.top
             anchors.left: parent.left
+            width: 250
             color: "#F9F9F9"
-            implicitWidth: 250
-            ColumnLayout{
+
+            ColumnLayout {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 35
+
                 Text {
-                    id: dashboard
                     text: qsTr("Dashboard")
                     font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
                 }
+
                 Text {
-                    id: ruleset
                     text: qsTr("Firewall ruleset")
                     font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
-                    Layout.topMargin: 35
                 }
+
                 Text {
-                    id: networks
                     text: qsTr("Check networks")
                     font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
-                    Layout.topMargin: 35
                 }
+
                 Text {
-                    id: logs
                     text: qsTr("Log history")
                     font.family: "Arial"
                     font.pointSize: 10.5
                     Layout.leftMargin: 50
-                    Layout.topMargin: 35
                 }
             }
         }
-        Rectangle{
+
+        // Status bar
+        Rectangle {
             id: statusbardiv
-            color: "#F9F9F9"
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             height: 25
-            MouseArea{
+            color: "#F9F9F9"
+
+            // Status bar top border
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 1
+                color: "#E6E6E6"
+            }
+
+            RowLayout {
                 anchors.fill: parent
-            onClicked:{
-                console.log("Button was clicked")
-            }
-            }
-            Rectangle{
-            anchors.fill: parent
-            RowLayout{
-            anchors.fill: parent
-            RowLayout{
-                Layout.leftMargin: 20
-            Text {
-                text: qsTr("Layout")
-                font.family: "Arial"
-                font.pointSize: 8
-                color: "#757575"
-            }
-            Text {
-                text: qsTr("Connected to Internet")
-                font.family: "Arial"
-                font.pointSize: 8
-                color: "#757575"
-                Layout.leftMargin: 10
-            }
-            }
-            RowLayout{
-                Layout.alignment: Qt.AlignRight
-                Layout.rightMargin: 20
+                anchors.margins: 5
+
+                // Left status items
+                RowLayout {
+                    spacing: 10
+                    Layout.leftMargin: 15
+
+                    Text {
+                        text: qsTr("Layout")
+                        font.family: "Arial"
+                        font.pointSize: 8
+                        color: "#757575"
+                    }
+
+                    Text {
+                        text: qsTr("Connected to Internet")
+                        font.family: "Arial"
+                        font.pointSize: 8
+                        color: "#757575"
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // Right status items
                 Text {
                     text: qsTr("Help")
                     font.family: "Arial"
                     font.pointSize: 8
                     color: "#757575"
+                    Layout.rightMargin: 15
                 }
             }
-            }
-            }
-            Rectangle{
-                id: statusbarborder
-                anchors.top: statusbardiv.top
-                anchors.left: statusbardiv.left
-                anchors.right: statusbardiv.right
-                height: 1
-                color: "#E6E6E6"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    console.log("Status bar clicked")
+                }
             }
         }
+    }
 }
