@@ -158,12 +158,10 @@ ApplicationWindow {
                         icon.width: 20
                         icon.height: 20
                         flat: true
-                        onClicked: {
-                            // Open the website login page
-                            Qt.openUrlExternally("https://localhost:3000/login");
-                        }
+                        onClicked: changer.push("Login.qml")
                     }
                 }
+
             }
 
             // File menu popup
@@ -370,5 +368,9 @@ ApplicationWindow {
                 }
             }
         }
+    }
+    StackView{
+        id: changer
+        anchors.fill: parent
     }
 }
