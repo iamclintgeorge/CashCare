@@ -135,28 +135,28 @@ ApplicationWindow {
 
                 // Right navbar items (icons for settings, notifications, and profile)
                 RowLayout {
-                    spacing: 10
+                    spacing: 0
 
                     Button {
                         icon.source: "images/settings.png" // Settings icon
-                        icon.width: 24
-                        icon.height: 24
+                        icon.width: 20
+                        icon.height: 20
                         flat: true
                         onClicked: console.log("Settings clicked")
                     }
 
                     Button {
                         icon.source: "images/notification.png" // Notification icon
-                        icon.width: 24
-                        icon.height: 24
+                        icon.width: 20
+                        icon.height: 20
                         flat: true
                         onClicked: console.log("Notifications clicked")
                     }
 
                     Button {
                         icon.source: "images/profile.png" // Profile icon
-                        icon.width: 24
-                        icon.height: 24
+                        icon.width: 20
+                        icon.height: 20
                         flat: true
                         onClicked: {
                             // Open the website login page
@@ -240,8 +240,8 @@ ApplicationWindow {
 
                     Image {
                         source: "images/dashboard.png" // Dashboard icon
-                        Layout.preferredWidth: 20
-                        Layout.preferredHeight: 20
+                        Layout.preferredWidth: 18
+                        Layout.preferredHeight:18
                     }
 
                     Text {
