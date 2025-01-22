@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Controls.Fusion
 
 ApplicationWindow {
     id: root
@@ -10,6 +11,41 @@ ApplicationWindow {
     visible: true
     title: qsTr("CashCare - Securing Transactions, one at a time")
     color: "#EAEAEA"
+
+    // Property to store internet connection status
+    property bool isConnectedToInternet: false
+
+    // Function to check internet connection
+    function checkInternetConnection() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://www.google.com", true); // Use a reliable URL to check connectivity
+        xhr.timeout = 3000; // Set timeout to 3 seconds
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    isConnectedToInternet = true; // Connected to internet
+                } else {
+                    isConnectedToInternet = false; // Not connected to internet
+                }
+            }
+        };
+
+        xhr.ontimeout = function() {
+            isConnectedToInternet = false; // Not connected to internet
+        };
+
+        xhr.send();
+    }
+
+    // Timer to periodically check internet connection
+    Timer {
+        id: internetCheckTimer
+        interval: 5000 // Check every 5 seconds
+        running: true
+        repeat: true
+        onTriggered: checkInternetConnection()
+    }
 
     Rectangle {
         id: mainContent
@@ -25,115 +61,148 @@ ApplicationWindow {
             height: 50
             color: "#F9F9F9"
 
-            Rectangle {
+            RowLayout {
                 anchors.fill: parent
-                anchors.margins: 15
-                color: "#F9F9F9"
+                anchors.margins: 10
+                spacing: 20
 
+                // Left navbar items
                 RowLayout {
-                    anchors.fill: parent
-                    spacing: 10
+                    spacing: 20
 
-                    // Left navbar items
-                    RowLayout {
-                        id: leftnavbar
-                        spacing: 11
-                        Layout.leftMargin: 10
+                    // File menu
+                    Text {
+                        id: file
+                        text: qsTr("File")
+                        font.family: "Inter"
+                        font.pointSize: 10
+                        color: "#000000"
 
-                        Text {
-                            id: file
-                            text: qsTr("File")
-                            font.family: "Inter"
-                            font.pointSize: 10
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: menu.visible = !menu.visible
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                fileMenu.visible = !fileMenu.visible;
                             }
                         }
-
-                        Text {
-                            text: qsTr("Edit")
-                            font.family: "Arial"
-                            font.pointSize: 10
-                        }
-
-                        Text {
-                            text: qsTr("View")
-                            font.family: "Arial"
-                            font.pointSize: 10
-                        }
-
-                        Text {
-                            text: qsTr("Help")
-                            font.family: "Arial"
-                            font.pointSize: 10
-                        }
                     }
 
-                    // Center spacer
-                    Item {
-                        Layout.fillWidth: true
+                    Text {
+                        text: qsTr("Edit")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        color: "#000000"
                     }
 
-                    // Right navbar items
-                    RowLayout {
-                        spacing: 10
-                        Layout.rightMargin: 15
+                    Text {
+                        text: qsTr("View")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        color: "#000000"
+                    }
 
-                        Text {
-                            text: qsTr("Settings")
-                            font.family: "Arial"
-                            font.pointSize: 10
-                        }
+                    Text {
+                        text: qsTr("Help")
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        color: "#000000"
+                    }
+                }
 
-                        Text {
-                            text: qsTr("Notification")
-                            font.family: "Arial"
-                            font.pointSize: 10
-                        }
+                // Spacer
+                Item { Layout.fillWidth: true }
 
-                        Button {
-                            text: qsTr("Login")
-                            font.family: "Arial"
-                            font.pointSize: 10
+                // Search bar in the middle
+                TextField {
+                    id: searchBar
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Search...")
+                    font.family: "Arial"
+                    font.pointSize: 10
+                    leftPadding: 30
+                    background: Rectangle {
+                        color: "#FFFFFF"
+                        radius: 15
+                        Image {
+                            source: "images/search.png" // Search icon
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            width: 16
+                            height: 16
                         }
                     }
                 }
 
-                // File menu popup
-                Rectangle {
-                    id: menu
-                    width: 150
-                    height: 100
-                    visible: false
-                    color: "#F9F9F9"
-                    border.color: "#E6E6E6"
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.topMargin: 30
+                // Right navbar items (icons for settings, notifications, and profile)
+                RowLayout {
+                    spacing: 10
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        spacing: 5
+                    Button {
+                        icon.source: "images/settings.png" // Settings icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: console.log("Settings clicked")
+                    }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: 30
-                            color: "#F9F9F9"
-                            border.color: "#E6E6E6"
+                    Button {
+                        icon.source: "images/notification.png" // Notification icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: console.log("Notifications clicked")
+                    }
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Exit"
-                                color: "black"
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: Qt.quit()
-                            }
+                    Button {
+                        icon.source: "images/profile.png" // Profile icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: {
+                            // Open the website login page
+                            Qt.openUrlExternally("https://localhost:3000/login");
                         }
+                    }
+                }
+            }
+
+            // File menu popup
+            Rectangle {
+                id: fileMenu
+                width: 150
+                height: 30 // Height for a single option
+                visible: false
+                color: "#FFFFFF"
+                border.color: "#E6E6E6"
+                anchors.top: file.bottom // Position below the "File" text
+                anchors.left: file.left
+                anchors.topMargin: 5 // Small margin to avoid overlapping
+                z: 100 // Ensure the menu is on top of other elements
+
+                // Prevent clicks from propagating to underlying elements
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {} // Do nothing, just block clicks
+                }
+
+                // Exit option
+                Rectangle {
+                    anchors.fill: parent
+                    color: fileMenuExitArea.containsMouse ? "#E6E6E6" : "#FFFFFF"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Exit"
+                        font.family: "Arial"
+                        font.pointSize: 10
+                        color: "#000000"
+                    }
+
+                    MouseArea {
+                        id: fileMenuExitArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: Qt.quit()
                     }
                 }
             }
@@ -163,33 +232,77 @@ ApplicationWindow {
                 anchors.right: parent.right
                 spacing: 35
 
-                Text {
-                    text: qsTr("Dashboard")
-                    font.family: "Arial"
-                    font.pointSize: 10.5
+                // Dashboard with icon
+                RowLayout {
                     Layout.leftMargin: 50
                     Layout.topMargin: 35
+                    spacing: 10
+
+                    Image {
+                        source: "images/dashboard.png" // Dashboard icon
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                    }
+
+                    Text {
+                        text: qsTr("Dashboard")
+                        font.family: "Arial"
+                        font.pointSize: 10.5
+                    }
                 }
 
-                Text {
-                    text: qsTr("Firewall ruleset")
-                    font.family: "Arial"
-                    font.pointSize: 10.5
+                // Firewall ruleset with icon
+                RowLayout {
                     Layout.leftMargin: 50
+                    spacing: 10
+
+                    Image {
+                        source: "images/firewall.png" // Firewall icon
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                    }
+
+                    Text {
+                        text: qsTr("Firewall ruleset")
+                        font.family: "Arial"
+                        font.pointSize: 10.5
+                    }
                 }
 
-                Text {
-                    text: qsTr("Check networks")
-                    font.family: "Arial"
-                    font.pointSize: 10.5
+                // Check networks with icon
+                RowLayout {
                     Layout.leftMargin: 50
+                    spacing: 10
+
+                    Image {
+                        source: "images/network.png" // Network icon
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                    }
+
+                    Text {
+                        text: qsTr("Check networks")
+                        font.family: "Arial"
+                        font.pointSize: 10.5
+                    }
                 }
 
-                Text {
-                    text: qsTr("Log history")
-                    font.family: "Arial"
-                    font.pointSize: 10.5
+                // Log history with icon
+                RowLayout {
                     Layout.leftMargin: 50
+                    spacing: 10
+
+                    Image {
+                        source: "images/log.png" // Log icon
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                    }
+
+                    Text {
+                        text: qsTr("Log history")
+                        font.family: "Arial"
+                        font.pointSize: 10.5
+                    }
                 }
             }
         }
@@ -229,10 +342,10 @@ ApplicationWindow {
                     }
 
                     Text {
-                        text: qsTr("Connected to Internet")
+                        text: isConnectedToInternet ? "Connected to Internet" : "Not Connected to Internet"
                         font.family: "Arial"
                         font.pointSize: 8
-                        color: "#757575"
+                        color: isConnectedToInternet ? "#757575" : "#FF0000" // Red color for not connected
                     }
                 }
 

@@ -17,6 +17,15 @@ qt_add_qml_module(appCashCare
     VERSION 1.0
     QML_FILES
         Main.qml
+    RESOURCES
+       images/dashboard.png
+       images/firewall.png
+       images/network.png
+       images/log.png
+       images/settings.png
+       images/notification.png
+       images/profile.png
+       images/search.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
