@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Window
 import QtQuick.Controls.Fusion
+import com.example 1.0 // Import the NetworkSniffer class
 
 ApplicationWindow {
     id: root
-    width: 1020
+    width: 1200
     height: 720
     visible: true
     title: qsTr("CashCare - Securing Transactions, one at a time")
@@ -135,34 +136,34 @@ ApplicationWindow {
 
                 // Right navbar items (icons for settings, notifications, and profile)
                 RowLayout {
-                    spacing: 0
+                                    spacing: 0
 
-                    Button {
-                        icon.source: "images/settings.png" // Settings icon
-                        icon.width: 20
-                        icon.height: 20
-                        flat: true
-                        onClicked: console.log("Settings clicked")
-                    }
+                                    Button {
+                                        icon.source: "images/settings.png" // Settings icon
+                                        icon.width: 20
+                                        icon.height: 20
+                                        flat: true
+                                        onClicked: console.log("Settings clicked")
+                                    }
 
-                    Button {
-                        icon.source: "images/notification.png" // Notification icon
-                        icon.width: 20
-                        icon.height: 20
-                        flat: true
-                        onClicked: console.log("Notifications clicked")
-                    }
+                                    Button {
+                                        icon.source: "images/notification.png" // Notification icon
+                                        icon.width: 20
+                                        icon.height: 20
+                                        flat: true
+                                        onClicked: console.log("Notifications clicked")
+                                    }
 
-                    Button {
-                        icon.source: "images/profile.png" // Profile icon
-                        icon.width: 20
-                        icon.height: 20
-                        flat: true
-                        onClicked: changer.push("Login.qml")
-                    }
-                }
+                                    Button {
+                                        icon.source: "images/profile.png" // Profile icon
+                                        icon.width: 20
+                                        icon.height: 20
+                                        flat: true
+                                        onClicked: changer.push("Login.qml")
+                                    }
+                                }
 
-            }
+                            }
 
             // File menu popup
             Rectangle {
@@ -239,7 +240,7 @@ ApplicationWindow {
                     Image {
                         source: "images/dashboard.png" // Dashboard icon
                         Layout.preferredWidth: 18
-                        Layout.preferredHeight:18
+                        Layout.preferredHeight: 18
                     }
 
                     Text {
@@ -282,6 +283,13 @@ ApplicationWindow {
                         text: qsTr("Check networks")
                         font.family: "Arial"
                         font.pointSize: 10.5
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                // Show the network sniffer page
+                                networkSnifferPage.visible = true;
+                            }
+                        }
                     }
                 }
 
@@ -368,9 +376,249 @@ ApplicationWindow {
                 }
             }
         }
-    }
-    StackView{
-        id: changer
-        anchors.fill: parent
+
+        // Network Sniffer Page (initially hidden)
+        Rectangle {
+            id: networkSnifferPage
+            anchors.fill: parent
+            visible: false
+            color: "#FFFFFF"
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 10
+
+                // Header
+                Text {
+                    text: "Network Sniffer"
+                    font.family: "Arial"
+                    font.pointSize: 20
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                // Table header
+                Row {
+                    spacing: 1
+                    Repeater {
+                        model: ["Time", "Source", "Destination", "Protocol", "Source Port", "Destination Port", "Payload Length", "Flags", "Window Size", "Geolocation"]
+                        delegate: Rectangle {
+                            width: 120
+                            height: 30
+                            color: "#F0F0F0"
+                            border.color: "#E0E0E0"
+
+                            Text {
+                                text: modelData
+                                anchors.centerIn: parent
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Table view to display captured packets
+                ListView {
+                    id: packetListView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    model: ListModel {
+                        id: packetModel
+                    }
+                    delegate: Rectangle {
+                        width: packetListView.width
+                        height: 30
+                        color: index % 2 === 0 ? "#F9F9F9" : "#FFFFFF"
+                        border.color: "#E0E0E0"
+
+                        Row {
+                            spacing: 1
+                            Repeater {
+                                model: [time, source, destination, protocol, sourcePort, destinationPort, payloadLength, flags, windowSize, geolocation]
+                                delegate: Rectangle {
+                                    width: 120
+                                    height: 30
+
+                                    Text {
+                                        text: modelData
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                            }
+                        }
+
+                        // Handle row clicks
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                // Open detailed packet view
+                                packetDetailsWindow.visible = true;
+                                packetDetailsWindow.loadPacketDetails(model)
+                            }
+                        }
+                    }
+                }
+
+                // Back button
+                Button {
+                    text: "Back"
+                    font.family: "Arial"
+                    font.pointSize: 12
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        networkSnifferPage.visible = false;
+                    }
+                }
+            }
+        }
+
+        // Detailed packet view window
+        Window {
+            id: packetDetailsWindow
+            width: 600
+            height: 400
+            title: "Packet Details"
+            visible: false
+
+            property var packetData: null
+
+
+            function loadPacketDetails(packet) {
+                packetData = packet
+                detailsText.text = `
+                    <b>Time:</b> ${packet.time}<br>
+                    <b>Source:</b> ${packet.source}<br>
+                    <b>Destination:</b> ${packet.destination}<br>
+                    <b>Protocol:</b> ${packet.protocol}<br>
+                    <b>Source Port:</b> ${packet.sourcePort}<br>
+                    <b>Destination Port:</b> ${packet.destinationPort}<br>
+                    <b>Payload Length:</b> ${packet.payloadLength}<br>
+                    <b>Flags:</b> ${packet.flags}<br>
+                    <b>Window Size:</b> ${packet.windowSize}<br>
+                    <b>Geolocation:</b> ${packet.geolocation}<br>
+                `
+            }
+
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Text {
+                        id: detailsText
+                        font.pixelSize: 14
+                        wrapMode: Text.Wrap
+                        textFormat: Text.RichText
+                    }
+                }
+
+                Button {
+                    text: "Close"
+                    onClicked: packetDetailsWindow.close()
+                }
+            }
+        }
+
+        // Network Sniffer Component
+        NetworkSniffer {
+            id: networkSniffer
+            onPacketInfoChanged: {
+                // Print the packetInfo string for debugging
+                console.log("Packet Info:", packetInfo)
+
+                // Parse packet info and add to the table model
+                var packetDetails = parsePacketInfo(packetInfo)
+                packetModel.append(packetDetails)
+            }
+
+            function parsePacketInfo(packetInfo) {
+                // Split the packetInfo string into lines
+                var lines = packetInfo.split("\n")
+
+                // Extract relevant fields
+                var time = new Date().toLocaleTimeString()
+                var source = "N/A"
+                var destination = "N/A"
+                var protocol = "N/A"
+                var sourcePort = "N/A"
+                var destinationPort = "N/A"
+                var payloadLength = "N/A"
+                var flags = "N/A"
+                var windowSize = "N/A"
+                var geolocation = "N/A"
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim()
+
+                    if (line.startsWith("Source IP:")) {
+                        source = line.split(":")[1].trim()
+                    } else if (line.startsWith("Destination IP:")) {
+                        destination = line.split(":")[1].trim()
+                    } else if (line.startsWith("Protocol:")) {
+                        protocol = line.split(":")[1].trim()
+                    } else if (line.startsWith("Source Port:")) {
+                        sourcePort = line.split(":")[1].trim()
+                    } else if (line.startsWith("Destination Port:")) {
+                        destinationPort = line.split(":")[1].trim()
+                    } else if (line.startsWith("Payload Length:")) {
+                        payloadLength = line.split(":")[1].trim()
+                    } else if (line.startsWith("Flags:")) {
+                        flags = line.split(":")[1].trim()
+                    } else if (line.startsWith("Window Size:")) {
+                        windowSize = line.split(":")[1].trim()
+                    } else if (line.startsWith("Geolocation")) {
+                        geolocation = line.split(":")[1].trim()
+                    }
+                }
+
+                return {
+                    time: time,
+                    source: source,
+                    destination: destination,
+                    protocol: protocol,
+                    sourcePort: sourcePort,
+                    destinationPort: destinationPort,
+                    payloadLength: payloadLength,
+                    flags: flags,
+                    windowSize: windowSize,
+                    geolocation: geolocation
+                }
+            }
+        }
+
+
+        // Function to filter packets based on search text
+               function filterPackets() {
+                   var searchText = searchBar.text.toLowerCase()
+                   packetModel.clear()
+                   for (var i = 0; i < networkSniffer.packets.length; i++) {
+                       var packet = networkSniffer.packets[i]
+                       if (packet.source.toLowerCase().includes(searchText) ||
+                           packet.destination.toLowerCase().includes(searchText) ||
+                           packet.protocol.toLowerCase().includes(searchText)) {
+                           packetModel.append(packet)
+                       }
+                   }
+               }
+
+               // Function to export packet data to JSON
+               function exportPacketData() {
+                   var packetData = []
+                   for (var i = 0; i < packetModel.count; i++) {
+                       packetData.push(packetModel.get(i))
+                   }
+                   var jsonData = JSON.stringify(packetData, null, 2)
+                   var filePath = "packet_data.json"
+                   var file = Qt.openUrlExternally("file:///" + filePath)
+                   file.write(jsonData)
+                   file.close()
+                   console.log("Packet data exported to " + filePath)
+               }
     }
 }
