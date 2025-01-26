@@ -103,7 +103,7 @@ private:
             qDebug() << i++ << ":" << d->name << "-" << (d->description ? d->description : "No description");
         }
 
-        int selectedDeviceIndex = 3;
+        int selectedDeviceIndex = 0;
         pcap_if_t *selectedDevice = alldevs;
 
         for (i = 0; i < selectedDeviceIndex && selectedDevice != nullptr; i++) {
