@@ -16,6 +16,10 @@ ApplicationWindow {
     // Property to store internet connection status
     property bool isConnectedToInternet: false
 
+    // Property to store firewall rules (whitelist and blacklist)
+       property var whitelist: []
+       property var blacklist: []
+
     // Function to check internet connection
     function checkInternetConnection() {
         var xhr = new XMLHttpRequest();
@@ -39,6 +43,8 @@ ApplicationWindow {
         xhr.send();
     }
 
+
+
     // Timer to periodically check internet connection
     Timer {
         id: internetCheckTimer
@@ -48,10 +54,53 @@ ApplicationWindow {
         onTriggered: checkInternetConnection()
     }
 
+
+
+
+       // Function to check if an IP is allowed
+       function isIpAllowed(ip) {
+           if (whitelist.length > 0) {
+               return whitelist.includes(ip); // Only allow whitelisted IPs
+           } else if (blacklist.length > 0) {
+               return !blacklist.includes(ip); // Block blacklisted IPs
+           }
+           return true; // Allow all if no rules are set
+       }
+
+       // Function to add an IP to the whitelist
+       function addToWhitelist(ip) {
+           if (!whitelist.includes(ip)) {
+               whitelist.push(ip);
+               whitelistChanged();
+           }
+       }
+
+       // Function to add an IP to the blacklist
+       function addToBlacklist(ip) {
+           if (!blacklist.includes(ip)) {
+               blacklist.push(ip);
+               blacklistChanged();
+           }
+       }
+
+       // Function to remove an IP from the whitelist
+       function removeFromWhitelist(ip) {
+           whitelist = whitelist.filter(item => item !== ip);
+           whitelistChanged();
+       }
+
+       // Function to remove an IP from the blacklist
+       function removeFromBlacklist(ip) {
+           blacklist = blacklist.filter(item => item !== ip);
+           blacklistChanged();
+       }
+
     Rectangle {
         id: mainContent
         anchors.fill: parent
         color: "#EAEAEA"
+
+
 
         // Navbar
         Rectangle {
@@ -71,7 +120,7 @@ ApplicationWindow {
                 RowLayout {
                     spacing: 20
 
-                    // File menu
+                //File menu
                     Text {
                         id: file
                         text: qsTr("File")
@@ -108,7 +157,6 @@ ApplicationWindow {
                         color: "#000000"
                     }
                 }
-
                 // Spacer
                 Item { Layout.fillWidth: true }
 
@@ -136,34 +184,38 @@ ApplicationWindow {
 
                 // Right navbar items (icons for settings, notifications, and profile)
                 RowLayout {
-                                    spacing: 0
+                    spacing: 10
 
-                                    Button {
-                                        icon.source: "images/settings.png" // Settings icon
-                                        icon.width: 20
-                                        icon.height: 20
-                                        flat: true
-                                        onClicked: console.log("Settings clicked")
-                                    }
+                    Button {
+                        icon.source: "images/settings.png" // Settings icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: console.log("Settings clicked")
+                    }
 
-                                    Button {
-                                        icon.source: "images/notification.png" // Notification icon
-                                        icon.width: 20
-                                        icon.height: 20
-                                        flat: true
-                                        onClicked: console.log("Notifications clicked")
-                                    }
+                    Button {
+                        icon.source: "images/notification.png" // Notification icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: console.log("Notifications clicked")
+                    }
 
-                                    Button {
-                                        icon.source: "images/profile.png" // Profile icon
-                                        icon.width: 20
-                                        icon.height: 20
-                                        flat: true
-                                        onClicked: changer.push("Login.qml")
-                                    }
-                                }
+                    Button {
+                        icon.source: "images/profile.png" // Profile icon
+                        icon.width: 24
+                        icon.height: 24
+                        flat: true
+                        onClicked: {
+                            // Open the website login page
+                            Qt.openUrlExternally("https://localhost:3000/login");
+                        }
+                    }
+                }
+            }
 
-                            }
+
 
             // File menu popup
             Rectangle {
@@ -216,6 +268,218 @@ ApplicationWindow {
             }
         }
 
+
+        // Dashboard Page
+               Rectangle {
+                   id: dashboardPage
+                   anchors.top: navbardiv.bottom
+                   anchors.bottom: parent.bottom
+                   anchors.left: parent.left
+                   anchors.right: parent.right
+                   visible: true
+                   color: "#FFFFFF"
+                   z: 1
+
+                   ColumnLayout {
+                       anchors.fill: parent
+                       spacing: 10
+
+                       // Header
+                       Text {
+                           text: "Dashboard"
+                           font.family: "Arial"
+                           font.pointSize: 20
+                           Layout.alignment: Qt.AlignHCenter
+                       }
+
+                       // Firewall Rules Summary
+                       GroupBox {
+                           title: "Firewall Rules Summary"
+                           Layout.fillWidth: true
+
+                           ColumnLayout {
+                               spacing: 10
+
+                               Text {
+                                   text: "Whitelisted IPs: " + whitelist.join(", ")
+                                   wrapMode: Text.Wrap
+                               }
+
+                               Text {
+                                   text: "Blacklisted IPs: " + blacklist.join(", ")
+                                   wrapMode: Text.Wrap
+                               }
+                           }
+                       }
+
+                       // Blocked Packets Table
+                       GroupBox {
+                           title: "Blocked Packets"
+                           Layout.fillWidth: true
+                           Layout.fillHeight: true
+
+                           TableView {
+                               id: blockedPacketsTable
+                               model: ListModel {
+                                   id: blockedPacketsModel
+                               }
+                               Layout.fillWidth: true
+                               Layout.fillHeight: true
+
+                               columnWidthProvider: function(column) { return 150; }
+
+                               delegate: Rectangle {
+                                   implicitWidth: 150
+                                   implicitHeight: 30
+                                   border.color: "#E0E0E0"
+
+                                   Text {
+                                       text: modelData
+                                       anchors.centerIn: parent
+                                   }
+                               }
+                           }
+                       }
+                       // Back Button
+                       Button {
+                           text: "Back"
+                           Layout.alignment: Qt.AlignHCenter
+                           onClicked: {
+                                   dashboardPage.visible = false;
+                                   firewallRulesetPage.visible = false;
+                               }
+                       }
+                   }
+
+               }
+
+               // Firewall Ruleset Page
+               Rectangle {
+                   id: firewallRulesetPage
+                   anchors.top: navbardiv.bottom
+                   anchors.bottom: parent.bottom
+                   anchors.left: parent.left
+                   anchors.right: parent.right
+                   visible: false
+                   color: "#FFFFFF"
+                   // color: "lightblue"
+                   z: 1
+
+                   ColumnLayout {
+                       anchors.fill: parent
+                       spacing: 10
+
+                       // Header
+                       Text {
+                           text: "Firewall Ruleset"
+                           font.family: "Arial"
+                           font.pointSize: 20
+                           Layout.alignment: Qt.AlignHCenter
+                       }
+
+                       // Whitelist Section
+                       GroupBox {
+                           title: "Whitelist"
+                           Layout.fillWidth: true
+
+                           ColumnLayout {
+                               spacing: 10
+
+                               TextField {
+                                   id: whitelistInput
+                                   placeholderText: "Enter IP to whitelist"
+                                   Layout.fillWidth: true
+                               }
+
+                               Button {
+                                   text: "Add to Whitelist"
+                                   onClicked: {
+                                       if (whitelistInput.text.trim() !== "") {
+                                           addToWhitelist(whitelistInput.text.trim());
+                                           whitelistInput.clear();
+                                       }
+                                   }
+                               }
+
+                               ListView {
+                                   id: whitelistView
+                                   model: whitelist
+                                   Layout.fillWidth: true
+                                   Layout.preferredHeight: 100
+                                   delegate: RowLayout {
+                                       Text {
+                                           text: modelData
+                                           Layout.fillWidth: true
+                                       }
+                                       Button {
+                                           text: "Remove"
+                                           onClicked: removeFromWhitelist(modelData)
+                                       }
+                                   }
+                               }
+                           }
+                       }
+
+                    // Blacklist Section
+                    GroupBox {
+                        title: "Blacklist"
+                        Layout.fillWidth: true
+
+                        ColumnLayout {
+                            spacing: 10
+
+                            TextField {
+                                id: blacklistInput
+                                placeholderText: "Enter IP to blacklist"
+                                Layout.fillWidth: true
+                            }
+
+                            Button {
+                                text: "Add to Blacklist"
+                                onClicked: {
+                                    if (blacklistInput.text.trim() !== "") {
+                                        addToBlacklist(blacklistInput.text.trim());
+                                        blacklistInput.clear();
+                                    }
+                                }
+                            }
+
+                            ListView {
+                                id: blacklistView
+                                model: blacklist
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 100
+                                delegate: RowLayout {
+                                    Text {
+                                        text: modelData
+                                        Layout.fillWidth: true
+                                    }
+                                    Button {
+                                        text: "Remove"
+                                        onClicked: removeFromBlacklist(modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Back Button
+                    Button {
+                        text: "Back"
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: {
+                                dashboardPage.visible = false;
+                                firewallRulesetPage.visible = false;
+                            }
+                    }
+                }
+            }
+
+
+
+
+
+
         // Sidebar
         Rectangle {
             id: sidebardiv
@@ -239,14 +503,21 @@ ApplicationWindow {
 
                     Image {
                         source: "images/dashboard.png" // Dashboard icon
-                        Layout.preferredWidth: 18
-                        Layout.preferredHeight: 18
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
                     }
 
                     Text {
                         text: qsTr("Dashboard")
                         font.family: "Arial"
                         font.pointSize: 10.5
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                dashboardPage.visible = true;
+                                firewallRulesetPage.visible = false;
+                            }
+                        }
                     }
                 }
 
@@ -265,6 +536,13 @@ ApplicationWindow {
                         text: qsTr("Firewall ruleset")
                         font.family: "Arial"
                         font.pointSize: 10.5
+                        MouseArea {
+                               anchors.fill: parent
+                               onClicked: {
+                                   firewallRulesetPage.visible = true;
+                                   dashboardPage.visible = false;
+                               }
+                           }
                     }
                 }
 
@@ -498,6 +776,9 @@ ApplicationWindow {
                     <b>Flags:</b> ${packet.flags}<br>
                     <b>Window Size:</b> ${packet.windowSize}<br>
                     <b>Geolocation:</b> ${packet.geolocation}<br>
+                    <b>Failed Attempts:</b> ${packet.failedAttempts}<br>
+                    <b>Transaction Hour:</b> ${packet.transactionHour}<br>
+                    <b>Is Weekend:</b> ${packet.isWeekend}<br>
                 `
             }
 
@@ -552,6 +833,9 @@ ApplicationWindow {
                 var flags = "N/A"
                 var windowSize = "N/A"
                 var geolocation = "N/A"
+                var failedAttempts = "N/A"
+                var transactionHour = "N/A"
+                var isWeekend = "N/A"
 
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim()
@@ -572,8 +856,14 @@ ApplicationWindow {
                         flags = line.split(":")[1].trim()
                     } else if (line.startsWith("Window Size:")) {
                         windowSize = line.split(":")[1].trim()
-                    } else if (line.startsWith("Geolocation")) {
+                    } else if (line.startsWith("Geolocation:")) {
                         geolocation = line.split(":")[1].trim()
+                    } else if (line.startsWith("Failed Attempts:")) {
+                        failedAttempts = line.split(":")[1].trim()
+                    } else if (line.startsWith("Transaction Hour:")) {
+                        transactionHour = line.split(":")[1].trim()
+                    } else if (line.startsWith("Is Weekend:")) {
+                        isWeekend = line.split(":")[1].trim()
                     }
                 }
 
@@ -587,7 +877,10 @@ ApplicationWindow {
                     payloadLength: payloadLength,
                     flags: flags,
                     windowSize: windowSize,
-                    geolocation: geolocation
+                    geolocation: geolocation,
+                    failedAttempts: failedAttempts,
+                    transactionHour: transactionHour,
+                    isWeekend: isWeekend
                 }
             }
         }
