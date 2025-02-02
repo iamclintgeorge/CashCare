@@ -1,4 +1,3 @@
-
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -11,8 +10,26 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <memory>
+#include <ctime> // For time-related functions
+#include <map>  // For tracking failed attempts
+
+char sourceIPStr[INET_ADDRSTRLEN];
+QString sourceIP = QString(sourceIPStr);
+
+std::map<QString, int> failedAttemptsMap;
+
+#ifndef TH_SYN
+#define TH_SYN 0x02
+#endif
+
+#ifndef TH_ACK
+#define TH_ACK 0x10
+#endif
 
 #ifdef _WIN32
+
+#include <winsock2.h>
+#include <ws2tcpip.h> // For InetNtop
 // Define Ethernet header structure for Windows
 struct ether_header {
     u_char ether_dhost[6];
@@ -79,6 +96,14 @@ public:
         return m_packetInfo;
     }
 
+    Q_INVOKABLE bool isIpAllowed(const QString &ip) {
+        // Implement your logic here (e.g., check against whitelist/blacklist)
+        return true; // Placeholder
+    }
+
+
+
+
 signals:
     void packetInfoChanged();
 
@@ -103,7 +128,7 @@ private:
             qDebug() << i++ << ":" << d->name << "-" << (d->description ? d->description : "No description");
         }
 
-        int selectedDeviceIndex = 0;
+        int selectedDeviceIndex = 3;
         pcap_if_t *selectedDevice = alldevs;
 
         for (i = 0; i < selectedDeviceIndex && selectedDevice != nullptr; i++) {
@@ -169,8 +194,18 @@ private:
 
         if (ntohs(ethHeader->ether_type) == ETHERTYPE_IP) {
             struct ip *ipHeader = (struct ip *)(packetData + sizeof(struct ether_header));
+
+            // Convert source IP to string
+            char sourceIPStr[INET_ADDRSTRLEN];
+#ifdef _WIN32
+            inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIPStr, INET_ADDRSTRLEN);
+#else
+            inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIPStr, INET_ADDRSTRLEN);
+#endif
+            QString sourceIP = QString(sourceIPStr);
+
             packetDetails += QString("IP Header:\n");
-            packetDetails += QString("  Source IP: %1\n").arg(inet_ntoa(ipHeader->ip_src));
+            packetDetails += QString("  Source IP: %1\n").arg(sourceIP);
             packetDetails += QString("  Destination IP: %1\n").arg(inet_ntoa(ipHeader->ip_dst));
 
             int payloadLength = header->len - (sizeof(struct ether_header) + sizeof(struct ip));
@@ -186,6 +221,11 @@ private:
                 packetDetails += QString("  Destination Port: %1\n").arg(ntohs(tcpHeader->th_dport));
                 packetDetails += QString("  Flags: %1\n").arg(tcpHeader->th_flags);
                 packetDetails += QString("  Window Size: %1\n").arg(ntohs(tcpHeader->th_win));
+
+                // Track failed TCP handshakes (SYN without ACK)
+                if (tcpHeader->th_flags & TH_SYN && !(tcpHeader->th_flags & TH_ACK)) {
+                    failedAttemptsMap[sourceIP]++;
+                }
             } else if (ipHeader->ip_p == IPPROTO_UDP) {
                 struct udphdr *udpHeader = (struct udphdr *)(packetData + sizeof(struct ether_header) + sizeof(struct ip));
                 packetDetails += QString("UDP Header:\n");
@@ -194,8 +234,21 @@ private:
             }
 
             // Get geolocation
-            QString geolocation = getGeolocation(inet_ntoa(ipHeader->ip_src));
+            QString geolocation = getGeolocation(sourceIP);
             packetDetails += QString("Geolocation: %1\n").arg(geolocation);
+
+            // Extract transaction hour and check if it's a weekend
+            time_t timestamp = header->ts.tv_sec; // Packet timestamp
+            struct tm *timeInfo = localtime(&timestamp);
+            int transactionHour = timeInfo->tm_hour;
+            bool isWeekend = (timeInfo->tm_wday == 6 || timeInfo->tm_wday == 0); // Saturday (6) or Sunday (0)
+
+            // Add transaction hour and weekend status to packet details
+            packetDetails += QString("Transaction Hour: %1\n").arg(transactionHour);
+            packetDetails += QString("Is Weekend: %1\n").arg(isWeekend ? "Yes" : "No");
+
+            // Add failed attempts count for the source IP
+            packetDetails += QString("Failed Attempts: %1\n").arg(failedAttemptsMap[sourceIP]);
         }
 
         return packetDetails;
