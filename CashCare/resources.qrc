@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>Login.qml</file>
+        <file>Main.qml</file>
+        <!-- Add other files as needed -->
+    </qresource>
+</RCC>
+
