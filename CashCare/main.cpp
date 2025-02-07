@@ -10,12 +10,15 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <memory>
-#include <ctime> // For time-related functions
-#include <map>  // For tracking failed attempts
+#include <ctime>
+#include <map>
+#include <QList>
+#include <QString>
+#include <QVariantList>
+#include <QVariantMap>
 
 char sourceIPStr[INET_ADDRSTRLEN];
 QString sourceIP = QString(sourceIPStr);
-
 std::map<QString, int> failedAttemptsMap;
 
 #ifndef TH_SYN
@@ -27,10 +30,9 @@ std::map<QString, int> failedAttemptsMap;
 #endif
 
 #ifdef _WIN32
-
 #include <winsock2.h>
-#include <ws2tcpip.h> // For InetNtop
-// Define Ethernet header structure for Windows
+#include <ws2tcpip.h>
+
 struct ether_header {
     u_char ether_dhost[6];
     u_char ether_shost[6];
@@ -78,9 +80,20 @@ struct udphdr {
 #include <netinet/udp.h>
 #endif
 
+struct FirewallRule {
+    QString sourceIp;
+    quint16 port;
+    QString protocol;
+    QString action;
+};
+
 class NetworkSniffer : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString packetInfo READ packetInfo NOTIFY packetInfoChanged)
+    Q_PROPERTY(int totalPackets READ totalPackets NOTIFY statsChanged)
+    Q_PROPERTY(int blockedPackets READ blockedPackets NOTIFY statsChanged)
+    Q_PROPERTY(double bandwidthUsage READ bandwidthUsage NOTIFY statsChanged)
+    Q_PROPERTY(QVariantList firewallRules READ firewallRules NOTIFY firewallRulesChanged)
 
 public:
     explicit NetworkSniffer(QObject *parent = nullptr)
@@ -96,22 +109,105 @@ public:
         return m_packetInfo;
     }
 
+    int totalPackets() const { return m_totalPackets; }
+    int blockedPackets() const { return m_blockedPackets.size(); }
+    double bandwidthUsage() const { return m_bandwidthUsage; }
+
     Q_INVOKABLE bool isIpAllowed(const QString &ip) {
-        // Implement your logic here (e.g., check against whitelist/blacklist)
-        return true; // Placeholder
+        return true;
     }
 
+    Q_INVOKABLE void addFirewallRule(const QString &sourceIp, quint16 port, const QString &protocol, const QString &action) {
+        FirewallRule rule;
+        rule.sourceIp = sourceIp;
+        rule.port = port;
+        rule.protocol = protocol;
+        rule.action = action;
+        m_firewallRules.append(rule);
+        emit firewallRulesChanged();
+    }
 
+    Q_INVOKABLE void removeFirewallRule(int index) {
+        if (index >= 0 && index < m_firewallRules.size()) {
+            m_firewallRules.removeAt(index);
+            emit firewallRulesChanged();
+        }
+    }
 
+    void updateBandwidth(int packetLen) {
+        m_totalBytes += packetLen;
+        qint64 now = QDateTime::currentMSecsSinceEpoch();
+        if (now - m_lastUpdateTime >= 1000) {
+            m_bandwidthUsage = (m_totalBytes * 1000.0) / (now - m_lastUpdateTime) / 1024;
+            m_totalBytes = 0;
+            m_lastUpdateTime = now;
+            emit statsChanged();
+        }
+    }
+
+    QVariantList firewallRules() const {
+        QVariantList rules;
+        for (const auto& rule : m_firewallRules) {
+            QVariantMap entry;
+            entry["sourceIp"] = rule.sourceIp;
+            entry["port"] = rule.port;
+            entry["protocol"] = rule.protocol;
+            entry["action"] = rule.action;
+            rules.append(entry);
+        }
+        return rules;
+    }
 
 signals:
+    void statsChanged();
+    void firewallRulesChanged();
     void packetInfoChanged();
+    void blockedPacketsChanged();
 
 private:
     QString m_packetInfo;
     pcap_t *m_pcapHandle;
     QNetworkAccessManager *m_networkManager;
     std::unique_ptr<QTimer> m_timer;
+    QList<FirewallRule> m_firewallRules;
+    QStringList m_blockedPackets;
+    int m_totalPackets = 0;
+    qint64 m_totalBytes = 0;
+    qint64 m_lastUpdateTime = QDateTime::currentMSecsSinceEpoch();
+    double m_bandwidthUsage = 0.0;
+
+    QString getGeolocation(const QString &ip) {
+        QNetworkRequest request(QUrl(QString("http://ip-api.com/json/%1").arg(ip)));
+        QNetworkReply *reply = m_networkManager->get(request);
+
+        QEventLoop loop;
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+
+        if (reply->error() == QNetworkReply::NoError) {
+            QByteArray response = reply->readAll();
+            QJsonDocument jsonDoc = QJsonDocument::fromJson(response);
+            QJsonObject jsonObj = jsonDoc.object();
+
+            QString country = jsonObj["country"].toString();
+            QString city = jsonObj["city"].toString();
+            return QString("%1, %2").arg(city, country);
+        }
+        return "Unknown";
+    }
+
+    bool checkFirewallRules(const QString &srcIp, quint16 dstPort, const QString &protocol) {
+        for (const auto &rule : m_firewallRules) {
+            bool ipMatch = rule.sourceIp.isEmpty() || (rule.sourceIp == srcIp);
+            bool portMatch = rule.port == 0 || rule.port == dstPort;
+            bool protoMatch = rule.protocol == "Any" || rule.protocol == protocol;
+
+            if (ipMatch && portMatch && protoMatch) {
+                return (rule.action == "Block");
+            }
+        }
+        return false;
+    }
 
     void startSniffing() {
         char errbuf[PCAP_ERRBUF_SIZE];
@@ -192,64 +288,15 @@ private:
         packetDetails += QString("  Source MAC: %1\n").arg(macToString(ethHeader->ether_shost));
         packetDetails += QString("  Destination MAC: %1\n").arg(macToString(ethHeader->ether_dhost));
 
-        if (ntohs(ethHeader->ether_type) == ETHERTYPE_IP) {
-            struct ip *ipHeader = (struct ip *)(packetData + sizeof(struct ether_header));
+        struct ip *ipHeader = (struct ip *)(packetData + sizeof(struct ether_header));
+        struct tcphdr *tcpHeader = (struct tcphdr *)(packetData + sizeof(struct ether_header) + sizeof(struct ip));
 
-            // Convert source IP to string
-            char sourceIPStr[INET_ADDRSTRLEN];
-#ifdef _WIN32
-            inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIPStr, INET_ADDRSTRLEN);
-#else
-            inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIPStr, INET_ADDRSTRLEN);
-#endif
-            QString sourceIP = QString(sourceIPStr);
-
-            packetDetails += QString("IP Header:\n");
-            packetDetails += QString("  Source IP: %1\n").arg(sourceIP);
-            packetDetails += QString("  Destination IP: %1\n").arg(inet_ntoa(ipHeader->ip_dst));
-
-            int payloadLength = header->len - (sizeof(struct ether_header) + sizeof(struct ip));
-            if (payloadLength > 0) {
-                packetDetails += QString("Payload Length: %1 bytes\n").arg(payloadLength);
-            }
-
-            // Parse TCP/UDP headers
-            if (ipHeader->ip_p == IPPROTO_TCP) {
-                struct tcphdr *tcpHeader = (struct tcphdr *)(packetData + sizeof(struct ether_header) + sizeof(struct ip));
-                packetDetails += QString("TCP Header:\n");
-                packetDetails += QString("  Source Port: %1\n").arg(ntohs(tcpHeader->th_sport));
-                packetDetails += QString("  Destination Port: %1\n").arg(ntohs(tcpHeader->th_dport));
-                packetDetails += QString("  Flags: %1\n").arg(tcpHeader->th_flags);
-                packetDetails += QString("  Window Size: %1\n").arg(ntohs(tcpHeader->th_win));
-
-                // Track failed TCP handshakes (SYN without ACK)
-                if (tcpHeader->th_flags & TH_SYN && !(tcpHeader->th_flags & TH_ACK)) {
-                    failedAttemptsMap[sourceIP]++;
-                }
-            } else if (ipHeader->ip_p == IPPROTO_UDP) {
-                struct udphdr *udpHeader = (struct udphdr *)(packetData + sizeof(struct ether_header) + sizeof(struct ip));
-                packetDetails += QString("UDP Header:\n");
-                packetDetails += QString("  Source Port: %1\n").arg(ntohs(udpHeader->uh_sport));
-                packetDetails += QString("  Destination Port: %1\n").arg(ntohs(udpHeader->uh_dport));
-            }
-
-            // Get geolocation
-            QString geolocation = getGeolocation(sourceIP);
-            packetDetails += QString("Geolocation: %1\n").arg(geolocation);
-
-            // Extract transaction hour and check if it's a weekend
-            time_t timestamp = header->ts.tv_sec; // Packet timestamp
-            struct tm *timeInfo = localtime(&timestamp);
-            int transactionHour = timeInfo->tm_hour;
-            bool isWeekend = (timeInfo->tm_wday == 6 || timeInfo->tm_wday == 0); // Saturday (6) or Sunday (0)
-
-            // Add transaction hour and weekend status to packet details
-            packetDetails += QString("Transaction Hour: %1\n").arg(transactionHour);
-            packetDetails += QString("Is Weekend: %1\n").arg(isWeekend ? "Yes" : "No");
-
-            // Add failed attempts count for the source IP
-            packetDetails += QString("Failed Attempts: %1\n").arg(failedAttemptsMap[sourceIP]);
-        }
+        char ipAddr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &ipHeader->ip_src, ipAddr, sizeof(ipAddr));
+        QString sourceIP = QString(ipAddr);
+        packetDetails += QString("IP Header:\n");
+        packetDetails += QString("  Source IP: %1\n").arg(sourceIP);
+        packetDetails += QString("  Destination IP: %1\n").arg(QString(inet_ntoa(ipHeader->ip_dst)));
 
         return packetDetails;
     }
@@ -263,27 +310,6 @@ private:
             .arg(mac[4], 2, 16, QChar('0'))
             .arg(mac[5], 2, 16, QChar('0'));
     }
-
-    QString getGeolocation(const QString &ip) {
-        QNetworkRequest request(QUrl(QString("http://ip-api.com/json/%1").arg(ip)));
-        QNetworkReply *reply = m_networkManager->get(request);
-
-        QEventLoop loop;
-        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        loop.exec();
-
-        if (reply->error() == QNetworkReply::NoError) {
-            QByteArray response = reply->readAll();
-            QJsonDocument jsonDoc = QJsonDocument::fromJson(response);
-            QJsonObject jsonObj = jsonDoc.object();
-
-            QString country = jsonObj["country"].toString();
-            QString city = jsonObj["city"].toString();
-            return QString("%1, %2").arg(city, country);
-        } else {
-            return "Unknown";
-        }
-    }
 };
 
 int main(int argc, char *argv[]) {
@@ -292,7 +318,6 @@ int main(int argc, char *argv[]) {
 
     qmlRegisterType<NetworkSniffer>("com.example", 1, 0, "NetworkSniffer");
     engine.loadFromModule("CashCare", "Main");
-
     return app.exec();
 }
 
