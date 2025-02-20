@@ -469,64 +469,6 @@ ApplicationWindow {
                     }
                 }
 
-                // GroupBox {
-                //     title: "🚨 Recent Blocked Activity"
-                //     Layout.fillWidth: true
-                //     Layout.fillHeight: true
-                //     font.bold: true
-                //     font.pixelSize: 16
-
-                //     ListView {
-                //         id: recentActivityList
-                //         anchors.fill: parent
-                //         model: networkSniffer.blockedPackets
-                //         clip: true
-                //         spacing: 5
-
-                //         delegate: Rectangle {
-                //             width: parent.width
-                //             height: 50
-                //             color: index % 2 === 0 ? "#f9f9f9" : "white"
-                //             radius: 5
-
-                //             RowLayout {
-                //                 anchors.fill: parent
-                //                 spacing: 15
-                //                 anchors.margins: 10
-
-                //                 // Red indicator bar
-                //                 Rectangle {
-                //                     width: 5
-                //                     height: parent.height
-                //                     color: "#e74c3c"
-                //                     radius: 2
-                //                 }
-
-                //                 ColumnLayout {
-                //                     spacing: 3
-
-                //                     Text {
-                //                         text: modelData
-                //                         font.pixelSize: 14
-                //                         font.bold: true
-                //                         color: "#2c3e50"
-                //                     }
-
-                //                     Text {
-                //                         text: "Blocked by firewall rule"
-                //                         font.pixelSize: 12
-                //                         color: "#7f8c8d"
-                //                     }
-                //                 }
-                //             }
-                //         }
-
-                //         ScrollBar.vertical: ScrollBar {
-                //             policy: ScrollBar.AlwaysOn
-                //         }
-                //     }
-                // }
-
                 // Firewall Rules Quick Stats
                 RowLayout {
                     Layout.fillWidth: true
