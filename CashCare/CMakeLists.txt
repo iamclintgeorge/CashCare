@@ -48,6 +48,17 @@ qt_add_qml_module(appCashCare
         images/notification.png
         images/profile.png
         images/search.png
+        QML_FILES DashboardPage.qml
+        QML_FILES Sidebar.qml
+        QML_FILES
+        QML_FILES
+        QML_FILES
+        QML_FILES Navbar.qml
+        QML_FILES Statusbar.qml
+        QML_FILES FirewallRulesetPage.qml
+        QML_FILES NetworkSnifferPage.qml
+        QML_FILES PacketDetailsWindow.qml
+        QML_FILES NetworkSniffer.qml
 )
 
 # Set target properties
