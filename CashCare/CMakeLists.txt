@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find Qt6 and required components
-find_package(Qt6 REQUIRED COMPONENTS Quick Network)  # Added Network for QNetworkAccessManager
+find_package(Qt6 REQUIRED COMPONENTS Quick Network)
 
-# Add Npcap include and library paths
+# Npcap configuration for Windows
 if (WIN32)
     set(NPCAP_INCLUDE_DIR "C:/Program Files/Npcap/Include")
     set(NPCAP_LIBRARY_DIR "C:/Program Files/Npcap/Lib/x64")
@@ -19,15 +19,18 @@ else()
     set(PCAP_LIBRARY pcap)
 endif()
 
-# Include Npcap headers
-include_directories(${NPCAP_INCLUDE_DIR})
+# Include directories for header files
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Standard Qt project setup
 qt_standard_project_setup(REQUIRES 6.5)
 
-# Add the executable
+# Add the executable with refactored source files
 qt_add_executable(appCashCare
     main.cpp
+    networksniffer.cpp
+    packetparser.cpp
+    networkutils.cpp
 )
 
 # Add QML module
@@ -55,11 +58,11 @@ set_target_properties(appCashCare PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-# Link libraries
+# Link necessary libraries
 target_link_libraries(appCashCare
     PRIVATE Qt6::Quick
-    PRIVATE Qt6::Network  # Link Qt Network module for QNetworkAccessManager
-    PRIVATE ${PCAP_LIBRARY}  # Link the Npcap library
+    PRIVATE Qt6::Network
+    PRIVATE ${PCAP_LIBRARY}
 )
 
 # Install targets
@@ -72,7 +75,6 @@ install(TARGETS appCashCare
 
 # Add a post-build step to copy Npcap DLL on Windows
 if (WIN32)
-    # Check if the DLL exists
     if (EXISTS "${NPCAP_LIBRARY_DIR}/wpcap.dll")
         add_custom_command(TARGET appCashCare POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
