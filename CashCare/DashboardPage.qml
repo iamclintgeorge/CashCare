@@ -1,13 +1,16 @@
-// DashboardPage.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import com.example 1.0
 
 Rectangle {
     id: dashboardPage
-    visible: true
+    visible: false
     color: "#FFFFFF"
-    z: 1
+
+    NetworkSniffer {
+        id: networkSniffer
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -44,7 +47,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: networkSniffer.totalPackets
+                        text: root.totalPackets
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
@@ -69,7 +72,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: networkSniffer.blockedPackets
+                        text: root.blockedPackets
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
@@ -94,7 +97,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: networkSniffer.bandwidthUsage.toFixed(2) + " KB/s"
+                        text: root.bandwidthUsage.toFixed(2) + " KB/s"
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
@@ -113,7 +116,7 @@ Rectangle {
             ListView {
                 id: recentActivityList
                 anchors.fill: parent
-                model: networkSniffer.blockedPackets
+                model: ListModel { id: blockedPacketsModel }
                 clip: true
                 spacing: 5
 
@@ -122,11 +125,6 @@ Rectangle {
                     height: 50
                     color: index % 2 === 0 ? "#f9f9f9" : "white"
                     radius: 5
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: packetDetailsWindow1.showDetails1(modelData)
-                    }
 
                     RowLayout {
                         anchors.fill: parent
@@ -144,18 +142,23 @@ Rectangle {
                             spacing: 3
 
                             Text {
-                                text: modelData.source + " → " + modelData.destination
+                                text: model.source + " → " + model.destination
                                 font.pixelSize: 14
                                 font.bold: true
                                 color: "#2c3e50"
                             }
 
                             Text {
-                                text: "Protocol: " + modelData.protocol + " | Blocked by firewall rule"
+                                text: "Protocol: " + model.protocol + " | Blocked by firewall rule"
                                 font.pixelSize: 12
                                 color: "#7f8c8d"
                             }
                         }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: packetDetailsWindow1.showDetails1(model)
                     }
                 }
 
@@ -182,12 +185,12 @@ Rectangle {
                     spacing: 8
 
                     Text {
-                        text: "Total Rules: " + networkSniffer.firewallRulesCount
+                        text: "Total Rules: " + root.firewallRules.length
                         font.pixelSize: 14
                     }
 
                     Repeater {
-                        model: networkSniffer.firewallRules
+                        model: root.firewallRules
                         delegate: Text {
                             text: "• " + modelData.sourceIp + ":" + modelData.port +
                                   " (" + modelData.protocol + ") - " + modelData.action
@@ -219,10 +222,7 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            onClicked: {
-                dashboardPage.visible = false
-                firewallRulesetPage.visible = false
-            }
+            onClicked: pageStack.clear() // No "main" page, so clear stack
         }
     }
 }

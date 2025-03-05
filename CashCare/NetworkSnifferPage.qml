@@ -1,12 +1,69 @@
-// NetworkSnifferPage.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import com.example 1.0
 
 Rectangle {
     id: networkSnifferPage
     visible: false
     color: "#FFFFFF"
+
+    NetworkSniffer {
+        id: sniffer
+        onPacketInfoChanged: {
+            var packetData = parsePacketInfo(packetInfo)
+            packetModel.append(packetData)
+            root.totalPackets++
+        }
+    }
+
+    function parsePacketInfo(packetInfo) {
+        var lines = packetInfo.split("\n")
+        var time = new Date().toLocaleTimeString()
+        var source = "N/A"
+        var destination = "N/A"
+        var protocol = "N/A"
+        var sourcePort = "N/A"
+        var destinationPort = "N/A"
+        var payloadLength = "N/A"
+        var flags = "N/A"
+        var windowSize = "N/A"
+        var geolocation = "N/A"
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim()
+            if (line.startsWith("Source IP:")) {
+                source = line.split(":")[1].trim()
+            } else if (line.startsWith("Destination IP:")) {
+                destination = line.split(":")[1].trim()
+            } else if (line.startsWith("Protocol:")) {
+                protocol = line.split(":")[1].trim()
+            } else if (line.startsWith("Source Port:")) {
+                sourcePort = line.split(":")[1].trim()
+            } else if (line.startsWith("Destination Port:")) {
+                destinationPort = line.split(":")[1].trim()
+            } else if (line.startsWith("Payload Length:")) {
+                payloadLength = line.split(":")[1].trim()
+            } else if (line.startsWith("Flags:")) {
+                flags = line.split(":")[1].trim()
+            } else if (line.startsWith("Window Size:")) {
+                windowSize = line.split(":")[1].trim()
+            }
+        }
+
+        return {
+            time: time,
+            source: source,
+            destination: destination,
+            protocol: protocol,
+            sourcePort: sourcePort,
+            destinationPort: destinationPort,
+            payloadLength: payloadLength,
+            flags: flags,
+            windowSize: windowSize,
+            geolocation: geolocation
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -102,7 +159,7 @@ Rectangle {
             font.family: "Arial"
             font.pointSize: 12
             Layout.alignment: Qt.AlignHCenter
-            onClicked: networkSnifferPage.visible = false
+            onClicked: pageStack.replace(dashboardPage)
         }
     }
 

@@ -1,4 +1,3 @@
-// PacketDetailsWindow.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -13,22 +12,7 @@ Window {
     property var packetData: null
 
     function showDetails1(packet) {
-        detailsText.text = `
-            <b>Time:</b> ${packet.time}<br>
-            <b>Source:</b> ${packet.source}<br>
-            <b>Destination:</b> ${packet.destination}<br>
-            <b>Protocol:</b> ${packet.protocol}<br>
-            <b>Source Port:</b> ${packet.sourcePort}<br>
-            <b>Destination Port:</b> ${packet.destinationPort}<br>
-            <b>Payload Length:</b> ${packet.payloadLength}<br>
-            <b>Flags:</b> ${packet.flags}<br>
-            <b>Window Size:</b> ${packet.windowSize}<br>
-            <b>Geolocation:</b> ${packet.geolocation}<br>
-            <b>Failed Attempts:</b> ${packet.failedAttempts}<br>
-            <b>Transaction Hour:</b> ${packet.transactionHour}<br>
-            <b>Is Weekend:</b> ${packet.isWeekend}<br>
-        `
-        visible = true
+        loadPacketDetails(packet) // Alias to maintain compatibility
     }
 
     function loadPacketDetails(packet) {
@@ -44,9 +28,6 @@ Window {
             <b>Flags:</b> ${packet.flags}<br>
             <b>Window Size:</b> ${packet.windowSize}<br>
             <b>Geolocation:</b> ${packet.geolocation}<br>
-            <b>Failed Attempts:</b> ${packet.failedAttempts}<br>
-            <b>Transaction Hour:</b> ${packet.transactionHour}<br>
-            <b>Is Weekend:</b> ${packet.isWeekend}<br>
         `
     }
 
