@@ -1,9 +1,12 @@
 #include "networksniffer.h"
 #include "packetparser.h"
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 NetworkSniffer::NetworkSniffer(QObject *parent)
     : QObject(parent), m_pcapHandle(nullptr), m_networkManager(new QNetworkAccessManager(this)) {
+    connect(m_networkManager, &QNetworkAccessManager::finished, this, &NetworkSniffer::handleGeoReply);
     startSniffing();
 }
 
@@ -55,12 +58,43 @@ void NetworkSniffer::capturePacket() {
         PacketParser parser;
         m_packetInfo = parser.parsePacket(header, packetData);
         m_totalPackets++;
+
+        // Extract source IP for geolocation
+        QStringList lines = m_packetInfo.split("\n");
+        for (const QString &line : lines) {
+            if (line.startsWith("  Source IP:")) {
+                m_pendingIp = line.split(":")[1].trimmed();
+                QUrl url("http://ip-api.com/json/" + m_pendingIp + "?fields=country,city");
+                m_networkManager->get(QNetworkRequest(url));
+                break;
+            }
+        }
+
+        qDebug() << "Captured Packet #" << m_totalPackets << ":\n" << m_packetInfo;
         emit packetInfoChanged();
         emit totalPacketsChanged();
-        // Add logic to determine if packet is blocked and update m_blockedPackets
-        // Update m_bandwidthUsage based on header->len if desired
     } else {
         m_packetInfo = (result == 0) ? "No packet captured" : "Error capturing packet";
+        qDebug() << "Packet capture failed:" << m_packetInfo;
         emit packetInfoChanged();
     }
+}
+
+void NetworkSniffer::handleGeoReply(QNetworkReply *reply) {
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray response = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(response);
+        if (!doc.isNull() && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            QString geo = QString("Geolocation: %1, %2").arg(obj["country"].toString(), obj["city"].toString());
+            m_packetInfo += "\n" + geo;
+            qDebug() << "Geolocation for IP" << m_pendingIp << ":" << geo;
+            emit packetInfoChanged(); // Update QML with geolocation
+        } else {
+            qWarning() << "Failed to parse geolocation JSON:" << response;
+        }
+    } else {
+        qWarning() << "Geolocation request failed:" << reply->errorString();
+    }
+    reply->deleteLater();
 }

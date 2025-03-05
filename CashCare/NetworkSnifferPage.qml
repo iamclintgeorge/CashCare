@@ -18,36 +18,38 @@ Rectangle {
     }
 
     function parsePacketInfo(packetInfo) {
-        var lines = packetInfo.split("\n")
-        var time = new Date().toLocaleTimeString()
-        var source = "N/A"
-        var destination = "N/A"
-        var protocol = "N/A"
-        var sourcePort = "N/A"
-        var destinationPort = "N/A"
-        var payloadLength = "N/A"
-        var flags = "N/A"
-        var windowSize = "N/A"
-        var geolocation = "N/A"
+        var lines = packetInfo.split("\n");
+        var time = new Date().toLocaleTimeString();
+        var source = "N/A";
+        var destination = "N/A";
+        var protocol = "N/A";
+        var sourcePort = "N/A";
+        var destinationPort = "N/A";
+        var payloadLength = "N/A";
+        var flags = "N/A";
+        var windowSize = "N/A";
+        var geolocation = "N/A";
 
         for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim()
+            var line = lines[i].trim();
             if (line.startsWith("Source IP:")) {
-                source = line.split(":")[1].trim()
+                source = line.split(":")[1].trim();
             } else if (line.startsWith("Destination IP:")) {
-                destination = line.split(":")[1].trim()
+                destination = line.split(":")[1].trim();
             } else if (line.startsWith("Protocol:")) {
-                protocol = line.split(":")[1].trim()
+                protocol = line.split(":")[1].trim();
             } else if (line.startsWith("Source Port:")) {
-                sourcePort = line.split(":")[1].trim()
+                sourcePort = line.split(":")[1].trim();
             } else if (line.startsWith("Destination Port:")) {
-                destinationPort = line.split(":")[1].trim()
+                destinationPort = line.split(":")[1].trim();
             } else if (line.startsWith("Payload Length:")) {
-                payloadLength = line.split(":")[1].trim()
+                payloadLength = line.split(":")[1].trim();
             } else if (line.startsWith("Flags:")) {
-                flags = line.split(":")[1].trim()
+                flags = line.split(":")[1].trim();
             } else if (line.startsWith("Window Size:")) {
-                windowSize = line.split(":")[1].trim()
+                windowSize = line.split(":")[1].trim();
+            } else if (line.startsWith("Geolocation:")) {
+                geolocation = line.split(":")[1].trim();
             }
         }
 
@@ -62,7 +64,7 @@ Rectangle {
             flags: flags,
             windowSize: windowSize,
             geolocation: geolocation
-        }
+        };
     }
 
     ColumnLayout {
@@ -89,13 +91,25 @@ Rectangle {
                 color: "#4A90E2"
                 Row {
                     spacing: 1
+                    Rectangle {
+                        width: 180
+                        height: 40
+                        color: "transparent"
+                        Text {
+                            text: "Time"
+                            anchors.centerIn: parent
+                            font.pixelSize: 14
+                            font.bold: true
+                            color: "#FFFFFF"
+                            elide: Text.ElideRight
+                        }
+                    }
                     Repeater {
-                        model: ["Time", "Source", "Destination", "Protocol", "Source Port", "Destination Port", "Payload Length", "Flags", "Window Size", "Geolocation"]
+                        model: ["Source", "Destination", "Protocol", "Source Port", "Destination Port", "Payload Length", "Flags", "Window Size", "Geolocation"]
                         delegate: Rectangle {
-                            width: 120
+                            width: (packetListView.width - 180) / 9
                             height: 40
                             color: "transparent"
-
                             Text {
                                 text: modelData
                                 anchors.centerIn: parent
@@ -120,12 +134,22 @@ Rectangle {
 
                 Row {
                     spacing: 1
+                    Rectangle {
+                        width: 180
+                        height: 40
+                        Text {
+                            text: time
+                            anchors.centerIn: parent
+                            font.pixelSize: 12
+                            color: "#333333"
+                            elide: Text.ElideRight
+                        }
+                    }
                     Repeater {
-                        model: [time, source, destination, protocol, sourcePort, destinationPort, payloadLength, flags, windowSize, geolocation]
+                        model: [source, destination, protocol, sourcePort, destinationPort, payloadLength, flags, windowSize, geolocation]
                         delegate: Rectangle {
-                            width: 120
+                            width: (packetListView.width - 180) / 9
                             height: 40
-
                             Text {
                                 text: modelData
                                 anchors.centerIn: parent
@@ -150,6 +174,9 @@ Rectangle {
             }
 
             ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AlwaysOn
+            }
+            ScrollBar.horizontal: ScrollBar {
                 policy: ScrollBar.AlwaysOn
             }
         }
