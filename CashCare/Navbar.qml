@@ -1,4 +1,3 @@
-// Navbar.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -29,26 +28,9 @@ Rectangle {
                 }
             }
 
-            Text {
-                text: qsTr("Edit")
-                font.family: "Arial"
-                font.pointSize: 10
-                color: "#000000"
-            }
-
-            Text {
-                text: qsTr("View")
-                font.family: "Arial"
-                font.pointSize: 10
-                color: "#000000"
-            }
-
-            Text {
-                text: qsTr("Help")
-                font.family: "Arial"
-                font.pointSize: 10
-                color: "#000000"
-            }
+            Text { text: qsTr("Edit"); font.family: "Arial"; font.pointSize: 10; color: "#000000" }
+            Text { text: qsTr("View"); font.family: "Arial"; font.pointSize: 10; color: "#000000" }
+            Text { text: qsTr("Help"); font.family: "Arial"; font.pointSize: 10; color: "#000000" }
         }
 
         Item { Layout.fillWidth: true }

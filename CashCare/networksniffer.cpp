@@ -11,10 +11,6 @@ NetworkSniffer::~NetworkSniffer() {
     stopSniffing();
 }
 
-QString NetworkSniffer::packetInfo() const {
-    return m_packetInfo;
-}
-
 void NetworkSniffer::startSniffing() {
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t *alldevs;
@@ -26,11 +22,12 @@ void NetworkSniffer::startSniffing() {
 
     pcap_if_t *selectedDevice = alldevs;
     const char *device = selectedDevice->name;
-    qDebug() << "Selected device:" << device;
+    qDebug() << "Sniffing on device:" << device;
 
     m_pcapHandle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
     if (!m_pcapHandle) {
-        qWarning() << "Could not open device:" << errbuf;
+        qWarning() << "Failed to open device:" << errbuf;
+        pcap_freealldevs(alldevs);
         return;
     }
 
@@ -57,7 +54,11 @@ void NetworkSniffer::capturePacket() {
     if (result == 1) {
         PacketParser parser;
         m_packetInfo = parser.parsePacket(header, packetData);
+        m_totalPackets++;
         emit packetInfoChanged();
+        emit totalPacketsChanged();
+        // Add logic to determine if packet is blocked and update m_blockedPackets
+        // Update m_bandwidthUsage based on header->len if desired
     } else {
         m_packetInfo = (result == 0) ? "No packet captured" : "Error capturing packet";
         emit packetInfoChanged();

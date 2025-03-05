@@ -1,4 +1,3 @@
-// Sidebar.qml
 import QtQuick
 import QtQuick.Layouts
 
@@ -6,6 +5,8 @@ Rectangle {
     id: sidebardiv
     width: 250
     color: "#F9F9F9"
+
+    signal pageSelected(string page)
 
     ColumnLayout {
         anchors.top: parent.top
@@ -30,11 +31,7 @@ Rectangle {
                 font.pointSize: 10.5
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        dashboardPage.visible = true
-                        firewallRulesetPage.visible = false
-                        networkSnifferPage.visible = false
-                    }
+                    onClicked: sidebardiv.pageSelected("dashboard")
                 }
             }
         }
@@ -55,11 +52,7 @@ Rectangle {
                 font.pointSize: 10.5
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        firewallRulesetPage.visible = true
-                        dashboardPage.visible = false
-                        networkSnifferPage.visible = false
-                    }
+                    onClicked: sidebardiv.pageSelected("firewall")
                 }
             }
         }
@@ -80,11 +73,7 @@ Rectangle {
                 font.pointSize: 10.5
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        networkSnifferPage.visible = true
-                        dashboardPage.visible = false
-                        firewallRulesetPage.visible = false
-                    }
+                    onClicked: sidebardiv.pageSelected("sniffer")
                 }
             }
         }
@@ -103,6 +92,7 @@ Rectangle {
                 text: qsTr("Log history")
                 font.family: "Arial"
                 font.pointSize: 10.5
+                // No action implemented yet
             }
         }
     }

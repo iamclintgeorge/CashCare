@@ -1,8 +1,8 @@
-// main.qml
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
+import com.example 1.0
 
 ApplicationWindow {
     id: root
@@ -101,28 +101,26 @@ ApplicationWindow {
             anchors.right: parent.right
         }
 
-        DashboardPage {
-            id: dashboardPage
+        StackView {
+            id: pageStack
             anchors.top: navbar.bottom
-            anchors.bottom: parent.bottom
+            anchors.bottom: statusbar.top
             anchors.left: sidebar.right
             anchors.right: parent.right
+            initialItem: dashboardPage
         }
 
-        FirewallRulesetPage {
-            id: firewallRulesetPage
-            anchors.top: navbar.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: sidebar.right
-            anchors.right: parent.right
-        }
+        DashboardPage { id: dashboardPage; visible: false }
+        FirewallRulesetPage { id: firewallRulesetPage; visible: false }
+        NetworkSnifferPage { id: networkSnifferPage; visible: false }
 
-        NetworkSnifferPage {
-            id: networkSnifferPage
-            anchors.top: navbar.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: sidebar.right
-            anchors.right: parent.right
+        Connections {
+            target: sidebar
+            function onPageSelected(page) {
+                if (page === "dashboard") pageStack.replace(dashboardPage)
+                else if (page === "firewall") pageStack.replace(firewallRulesetPage)
+                else if (page === "sniffer") pageStack.replace(networkSnifferPage)
+            }
         }
     }
 }

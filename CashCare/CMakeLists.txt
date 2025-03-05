@@ -58,7 +58,7 @@ qt_add_qml_module(appCashCare
         QML_FILES FirewallRulesetPage.qml
         QML_FILES NetworkSnifferPage.qml
         QML_FILES PacketDetailsWindow.qml
-        QML_FILES NetworkSniffer.qml
+        QML_FILES #NetworkSniffer.qml
 )
 
 # Set target properties
