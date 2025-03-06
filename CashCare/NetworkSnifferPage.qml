@@ -15,6 +15,15 @@ Rectangle {
             packetModel.append(packetData)
             root.totalPackets++
         }
+        onTransactionAmountChanged: {
+            console.log("Transaction Amount:", sniffer.transactionAmount)
+        }
+        onPaymentMethodChanged: {
+            console.log("Payment Method:", sniffer.paymentMethod)
+        }
+        onFailedAttemptsChanged: {
+            console.log("Failed Attempts:", sniffer.failedAttempts)
+        }
     }
 
     function parsePacketInfo(packetInfo) {
@@ -29,6 +38,9 @@ Rectangle {
         var flags = "N/A";
         var windowSize = "N/A";
         var geolocation = "N/A";
+        var transactionAmount = "N/A";
+        var paymentMethod = "N/A";
+        var failedAttempts = "0";
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
@@ -50,6 +62,14 @@ Rectangle {
                 windowSize = line.split(":")[1].trim();
             } else if (line.startsWith("Geolocation:")) {
                 geolocation = line.split(":")[1].trim();
+            } else if (line.startsWith("Transaction Amount:")) {
+                transactionAmount = line.split(":")[1].trim();
+            } else if (line.startsWith("Payment Method:")) {
+                paymentMethod = line.split(":")[1].trim();
+            } else if (line.startsWith("Failed Attempts:")) {
+                failedAttempts = line.split(":")[1].trim();
+            } else if (line.startsWith("Protocol Detected:")) {
+                protocol = line.split(":")[1].trim();
             }
         }
 
@@ -63,7 +83,10 @@ Rectangle {
             payloadLength: payloadLength,
             flags: flags,
             windowSize: windowSize,
-            geolocation: geolocation
+            geolocation: geolocation,
+            transactionAmount: transactionAmount,
+            paymentMethod: paymentMethod,
+            failedAttempts: failedAttempts
         };
     }
 
@@ -105,9 +128,9 @@ Rectangle {
                         }
                     }
                     Repeater {
-                        model: ["Source", "Destination", "Protocol", "Source Port", "Destination Port", "Payload Length", "Flags", "Window Size", "Geolocation"]
+                        model: ["Source", "Destination", "Protocol", "Source Port", "Destination Port", "Payload Length", "Flags", "Window Size", "Geolocation", "Amount", "Payment", "Failed"]
                         delegate: Rectangle {
-                            width: (packetListView.width - 180) / 9
+                            width: (packetListView.width - 180) / 12
                             height: 40
                             color: "transparent"
                             Text {
@@ -146,9 +169,9 @@ Rectangle {
                         }
                     }
                     Repeater {
-                        model: [source, destination, protocol, sourcePort, destinationPort, payloadLength, flags, windowSize, geolocation]
+                        model: [source, destination, protocol, sourcePort, destinationPort, payloadLength, flags, windowSize, geolocation, transactionAmount, paymentMethod, failedAttempts]
                         delegate: Rectangle {
-                            width: (packetListView.width - 180) / 9
+                            width: (packetListView.width - 180) / 12
                             height: 40
                             Text {
                                 text: modelData
