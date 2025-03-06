@@ -57,39 +57,41 @@ void NetworkSniffer::capturePacket() {
     if (result == 1) {
         PacketParser parser;
         m_packetInfo = parser.parsePacket(header, packetData);
-        m_totalPackets++;
 
-        // Extract source IP for geolocation
-        QStringList lines = m_packetInfo.split("\n");
-        for (const QString &line : lines) {
-            if (line.startsWith("  Source IP:")) {
-                m_pendingIp = line.split(":")[1].trimmed();
-                QUrl url("http://ip-api.com/json/" + m_pendingIp + "?fields=country,city");
-                m_networkManager->get(QNetworkRequest(url));
-                break;
+        // Only process IP packets
+        if (!m_packetInfo.contains("Not an IP packet") && !m_packetInfo.contains("Packet too short")) {
+            m_totalPackets++;
+            QStringList lines = m_packetInfo.split("\n");
+            for (const QString &line : lines) {
+                if (line.startsWith("  Source IP:")) {
+                    m_pendingIp = line.split(":")[1].trimmed();
+                    QUrl url("http://ip-api.com/json/" + m_pendingIp + "?fields=country,city");
+                    m_networkManager->get(QNetworkRequest(url));
+                }
+                if (line.startsWith("Transaction Amount:")) {
+                    m_transactionAmount = line.split(":")[1].trimmed();
+                    emit transactionAmountChanged();
+                }
+                if (line.startsWith("Payment Method:")) {
+                    m_paymentMethod = line.split(":")[1].trimmed();
+                    emit paymentMethodChanged();
+                }
+                if (line.startsWith("Failed Attempts:")) {
+                    m_failedAttempts = line.split(":")[1].trimmed().toInt();
+                    emit failedAttemptsChanged();
+                }
             }
-            // Reset financial data for each packet
-            if (line.startsWith("Transaction Amount:")) {
-                m_transactionAmount = line.split(":")[1].trimmed();
-                emit transactionAmountChanged();
-            }
-            if (line.startsWith("Payment Method:")) {
-                m_paymentMethod = line.split(":")[1].trimmed();
-                emit paymentMethodChanged();
-            }
-            if (line.startsWith("Failed Attempts:")) {
-                m_failedAttempts = line.split(":")[1].trimmed().toInt();
-                emit failedAttemptsChanged();
-            }
+
+            qDebug() << "Captured IP Packet #" << m_totalPackets << ":\n" << m_packetInfo;
+            emit packetInfoChanged();
+            emit totalPacketsChanged();
+        } else {
+            qDebug() << "Skipped non-IP packet or invalid packet:\n" << m_packetInfo;
         }
-
-        qDebug() << "Captured Packet #" << m_totalPackets << ":\n" << m_packetInfo;
-        emit packetInfoChanged();
-        emit totalPacketsChanged();
     } else {
         m_packetInfo = (result == 0) ? "No packet captured" : "Error capturing packet";
         qDebug() << "Packet capture failed:" << m_packetInfo;
-        emit packetInfoChanged();
+        // Do not emit packetInfoChanged() for failures
     }
 }
 
