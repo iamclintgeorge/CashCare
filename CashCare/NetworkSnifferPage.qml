@@ -13,7 +13,7 @@ Rectangle {
         onPacketInfoChanged: {
             var packetData = parsePacketInfo(packetInfo)
             packetModel.append(packetData)
-            root.totalPackets++
+            // root.totalPackets++ removed; handled in C++
         }
         onTransactionAmountChanged: {
             console.log("Transaction Amount:", sniffer.transactionAmount)

@@ -47,7 +47,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: root.totalPackets
+                        text: networkSniffer.totalPackets // Use C++ property directly
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
@@ -222,7 +222,7 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            onClicked: pageStack.clear() // No "main" page, so clear stack
+            onClicked: pageStack.clear()
         }
     }
 }
