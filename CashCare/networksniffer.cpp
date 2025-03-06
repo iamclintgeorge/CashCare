@@ -68,6 +68,19 @@ void NetworkSniffer::capturePacket() {
                 m_networkManager->get(QNetworkRequest(url));
                 break;
             }
+            // Reset financial data for each packet
+            if (line.startsWith("Transaction Amount:")) {
+                m_transactionAmount = line.split(":")[1].trimmed();
+                emit transactionAmountChanged();
+            }
+            if (line.startsWith("Payment Method:")) {
+                m_paymentMethod = line.split(":")[1].trimmed();
+                emit paymentMethodChanged();
+            }
+            if (line.startsWith("Failed Attempts:")) {
+                m_failedAttempts = line.split(":")[1].trimmed().toInt();
+                emit failedAttemptsChanged();
+            }
         }
 
         qDebug() << "Captured Packet #" << m_totalPackets << ":\n" << m_packetInfo;
@@ -89,7 +102,7 @@ void NetworkSniffer::handleGeoReply(QNetworkReply *reply) {
             QString geo = QString("Geolocation: %1, %2").arg(obj["country"].toString(), obj["city"].toString());
             m_packetInfo += "\n" + geo;
             qDebug() << "Geolocation for IP" << m_pendingIp << ":" << geo;
-            emit packetInfoChanged(); // Update QML with geolocation
+            emit packetInfoChanged();
         } else {
             qWarning() << "Failed to parse geolocation JSON:" << response;
         }
