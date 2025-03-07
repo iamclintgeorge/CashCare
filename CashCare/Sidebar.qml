@@ -92,7 +92,10 @@ Rectangle {
                 text: qsTr("Log history")
                 font.family: "Arial"
                 font.pointSize: 10.5
-                // No action implemented yet
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: sidebardiv.pageSelected("log")
+                }
             }
         }
     }

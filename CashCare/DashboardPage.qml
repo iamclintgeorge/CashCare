@@ -116,7 +116,7 @@ Rectangle {
                         text: root.blockedPackets
                         font.pixelSize: 28
                         font.bold: true
-                        color: "white"
+                        color: "white" // Fixed from "arecolor"
                     }
                 }
             }
@@ -213,39 +213,28 @@ Rectangle {
             id: packetDetailsWindow1
         }
 
-        RowLayout {
+        GroupBox {
+            title: "🔒 Active Firewall Rules (" + root.firewallRules.length + ")"
             Layout.fillWidth: true
-            spacing: 15
+            font.bold: true
 
-            GroupBox {
-                title: "🔒 Active Firewall Rules"
-                Layout.fillWidth: true
-                font.bold: true
+            ColumnLayout {
+                spacing: 8
 
-                ColumnLayout {
-                    spacing: 8
+                Text {
+                    text: "Total Rules: " + root.firewallRules.length
+                    font.pixelSize: 14
+                }
 
-                    Text {
-                        text: "Total Rules: " + root.firewallRules.length
-                        font.pixelSize: 14
-                    }
-
-                    Repeater {
-                        model: root.firewallRules
-                        delegate: Text {
-                            text: "• " + modelData.sourceIp + ":" + modelData.port +
-                                  " (" + modelData.protocol + ") - " + modelData.action
-                            font.pixelSize: 12
-                            color: modelData.action === "Block" ? "#e74c3c" : "#2ecc71"
-                        }
+                Repeater {
+                    model: root.firewallRules
+                    delegate: Text {
+                        text: "• " + modelData.sourceIp + ":" + modelData.port +
+                              " (" + modelData.protocol + ") - " + modelData.action
+                        font.pixelSize: 12
+                        color: modelData.action === "Block" ? "#e74c3c" : "#2ecc71"
                     }
                 }
-            }
-
-            GroupBox {
-                title: "📈 Traffic Composition"
-                Layout.fillWidth: true
-                font.bold: true
             }
         }
 
