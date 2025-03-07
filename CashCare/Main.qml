@@ -1,7 +1,7 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
-import QtQuick.Window
+import QtQuick 2.15
+import QtQuick.Layouts 1.15
+import QtQuick.Controls 2.15
+import QtQuick.Window 2.15
 import com.example 1.0
 
 ApplicationWindow {
@@ -15,7 +15,7 @@ ApplicationWindow {
     property bool isConnectedToInternet: false
     property var whitelist: []
     property var blacklist: []
-    property var firewallRules: []
+    property var firewallRules: [] // Implicitly provides firewallRulesChanged signal
     property int totalPackets: 0
     property int blockedPackets: 0
     property real bandwidthUsage: 0.0
@@ -113,6 +113,7 @@ ApplicationWindow {
         DashboardPage { id: dashboardPage; visible: false }
         FirewallRulesetPage { id: firewallRulesetPage; visible: false }
         NetworkSnifferPage { id: networkSnifferPage; visible: false }
+        LogPage { id: logPage; visible: false } // Added LogPage as per your recent request
 
         Connections {
             target: sidebar
@@ -120,6 +121,7 @@ ApplicationWindow {
                 if (page === "dashboard") pageStack.replace(dashboardPage)
                 else if (page === "firewall") pageStack.replace(firewallRulesetPage)
                 else if (page === "sniffer") pageStack.replace(networkSnifferPage)
+                else if (page === "log") pageStack.replace(logPage) // Added log page navigation
             }
         }
     }
