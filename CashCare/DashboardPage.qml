@@ -1,6 +1,6 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import com.example 1.0
 
 Rectangle {
@@ -10,6 +10,47 @@ Rectangle {
 
     NetworkSniffer {
         id: networkSniffer
+        onPacketInfoChanged: {
+            var lines = packetInfo.split("\n");
+            var packet = {
+                packetNumber: networkSniffer.totalPackets,
+                sourceMac: "",
+                destMac: "",
+                source: "",
+                destination: "",
+                protocol: "",
+                sourcePort: "",
+                destinationPort: "",
+                flags: "",
+                windowSize: "",
+                protocolDetected: "",
+                payloadLength: "0",
+                transactionAmount: networkSniffer.transactionAmount,
+                paymentMethod: networkSniffer.paymentMethod,
+                failedAttempts: networkSniffer.failedAttempts,
+                riskNote: networkSniffer.riskNote,
+                geolocation: ""
+            };
+
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].includes("Source MAC:")) packet.sourceMac = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Destination MAC:")) packet.destMac = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Source IP:")) packet.source = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Destination IP:")) packet.destination = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Protocol:")) packet.protocol = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Source Port:")) packet.sourcePort = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Destination Port:")) packet.destinationPort = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Flags:")) packet.flags = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Window Size:")) packet.windowSize = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Protocol Detected:")) packet.protocolDetected = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Payload Length:")) packet.payloadLength = lines[i].split(":")[1].trim();
+                else if (lines[i].includes("Geolocation:")) packet.geolocation = lines[i].split(":")[1].trim();
+            }
+
+            if (packet.riskNote !== "No risks detected") {
+                blockedPacketsModel.append(packet);
+            }
+        }
     }
 
     ColumnLayout {
@@ -47,7 +88,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: networkSniffer.totalPackets // Use C++ property directly
+                        text: networkSniffer.totalPackets
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
@@ -97,7 +138,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: root.bandwidthUsage.toFixed(2) + " KB/s"
+                        text: networkSniffer.bandwidthUsage.toFixed(2) + " KB/s"
                         font.pixelSize: 28
                         font.bold: true
                         color: "white"
