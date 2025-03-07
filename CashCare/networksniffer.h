@@ -7,6 +7,7 @@
 #include <pcap/pcap.h>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QMap>
 
 class NetworkSniffer : public QObject {
     Q_OBJECT
@@ -15,6 +16,9 @@ class NetworkSniffer : public QObject {
     Q_PROPERTY(QString transactionAmount READ transactionAmount NOTIFY transactionAmountChanged)
     Q_PROPERTY(QString paymentMethod READ paymentMethod NOTIFY paymentMethodChanged)
     Q_PROPERTY(int failedAttempts READ failedAttempts NOTIFY failedAttemptsChanged)
+    Q_PROPERTY(QString riskNote READ riskNote NOTIFY riskNoteChanged)
+    Q_PROPERTY(qreal bandwidthUsage READ bandwidthUsage NOTIFY bandwidthUsageChanged) // New property
+
 public:
     explicit NetworkSniffer(QObject *parent = nullptr);
     ~NetworkSniffer();
@@ -24,6 +28,8 @@ public:
     QString transactionAmount() const { return m_transactionAmount; }
     QString paymentMethod() const { return m_paymentMethod; }
     int failedAttempts() const { return m_failedAttempts; }
+    QString riskNote() const { return m_riskNote; }
+    qreal bandwidthUsage() const { return m_bandwidthUsage; }
 
 public slots:
     void startSniffing();
@@ -35,10 +41,14 @@ signals:
     void transactionAmountChanged();
     void paymentMethodChanged();
     void failedAttemptsChanged();
+    void riskNoteChanged();
+    void bandwidthUsageChanged();
 
 private slots:
     void capturePacket();
     void handleGeoReply(QNetworkReply *reply);
+    void handleThreatReply(QNetworkReply *reply);
+    void updateBandwidth(); // New slot
 
 private:
     pcap_t *m_pcapHandle;
@@ -50,6 +60,11 @@ private:
     QString m_transactionAmount = "N/A";
     QString m_paymentMethod = "N/A";
     int m_failedAttempts = 0;
+    QString m_riskNote = "No risks detected";
+    QMap<QString, int> m_ipConnectionCount;
+    qreal m_bandwidthUsage = 0.0; // KB/s
+    quint64 m_totalBytes = 0;     // Total bytes captured
+    QTimer *m_bandwidthTimer;     // Timer for bandwidth updates
 };
 
 #endif
