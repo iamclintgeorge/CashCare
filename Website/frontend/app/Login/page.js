@@ -22,7 +22,7 @@ const Login = () => {
       const response = await axios.post('http://localhost:3001/api/login', {
         email,
         password,
-      }, { withCredentials: true });  // Allow cookies to be sent
+      }, { withCredentials: true });  // Allow cookies to send
 
       if (response.data.success) {
         // The token is automatically stored in the cookie by the backend

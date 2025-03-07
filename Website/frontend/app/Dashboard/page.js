@@ -1,6 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Header1 from "../Components/Header1";
+import Herosec from "../Sections/Herosec";
+import Whycashcare from "../Sections/Whycashcare";
+import Pricing from "../Sections/Pricing";
+import Footer from "../Components/Footer";
 
 function Dashboard() {
   const [protectedData, setProtectedData] = useState(null);
@@ -55,14 +60,19 @@ function Dashboard() {
     <div>
       {error && <div>{error}</div>}
       {protectedData ? (
-        <div className='flex justify-between mt-4'>
-          <h1 className='ml-4'>Welcome to the Dashboard </h1>
+        <div>
+          {/* <h1 className='ml-4'>Welcome to the Dashboard </h1> */}
           {/* <p>{protectedData.message}</p> */}
-            <div className=''>
+            <Header1 />
+            <Herosec />
+            <Whycashcare />
+            <Pricing />
+            <Footer />
+            {/* <div className=''>
               <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded mr-4">
                 Logout
               </button>
-            </div>
+            </div> */}
         </div>
       ) : (
         <div>Loading...</div>
