@@ -22,6 +22,9 @@ Rectangle {
     NetworkSniffer {
         id: networkSniffer
         onPacketInfoChanged: {
+            console.log("Packet Info Changed:\n" + packetInfo); // Debug
+            console.log("Risk Note: " + riskNote); // Debug
+            console.log("Total Packets: " + totalPackets); // Debug
             var lines = packetInfo.split("\n");
             var packet = {
                 packetNumber: networkSniffer.totalPackets,
@@ -70,15 +73,16 @@ Rectangle {
                 }
                 blockedPacketsModel.append(packet);
                 root.blockedPackets += 1;
+                console.log("Added to blockedPacketsModel: Packet #" + packet.packetNumber); // Debug
             }
         }
         onPacketContextUpdated: function(packetNumber, context) {
-            console.log("Received context for packet #:", packetNumber); // Debug
-            console.log("Context:", context); // Debug
+            console.log("Received context for packet #:", packetNumber);
+            console.log("Context:", context);
             for (var i = 0; i < blockedPacketsModel.count; i++) {
                 if (blockedPacketsModel.get(i).packetNumber.toString() === packetNumber) {
                     blockedPacketsModel.setProperty(i, "context", context);
-                    console.log("Updated context at index", i); // Debug
+                    console.log("Updated context at index", i);
                     break;
                 }
             }
@@ -256,5 +260,9 @@ Rectangle {
             }
             onClicked: pageStack.clear()
         }
+    }
+
+    Component.onCompleted: {
+        console.log("DashboardPage loaded"); // Debug
     }
 }
