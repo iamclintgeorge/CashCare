@@ -8,6 +8,17 @@ Rectangle {
     visible: false
     color: "#FFFFFF"
 
+    function isBlockedByFirewall(packet) {
+        for (var i = 0; i < root.firewallRules.length; i++) {
+            var rule = root.firewallRules[i];
+            if (rule.sourceIp === packet.source && rule.action === "Block" &&
+                (rule.port === "any" || rule.port === packet.sourcePort || rule.port === packet.destinationPort)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     NetworkSniffer {
         id: networkSniffer
         onPacketInfoChanged: {
@@ -47,8 +58,9 @@ Rectangle {
                 else if (lines[i].includes("Geolocation:")) packet.geolocation = lines[i].split(":")[1].trim();
             }
 
-            if (packet.riskNote !== "No risks detected") {
+            if (packet.riskNote === "Fraudulent Activity Detected" && isBlockedByFirewall(packet)) {
                 blockedPacketsModel.append(packet);
+                root.blockedPackets += 1;
             }
         }
     }
@@ -76,23 +88,11 @@ Rectangle {
                 height: 120
                 radius: 10
                 color: "#3498db"
-
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 8
-
-                    Text {
-                        text: "📦 TOTAL PACKETS"
-                        font.pixelSize: 14
-                        color: "white"
-                    }
-
-                    Text {
-                        text: networkSniffer.totalPackets
-                        font.pixelSize: 28
-                        font.bold: true
-                        color: "white"
-                    }
+                    Text { text: "📦 TOTAL PACKETS"; font.pixelSize: 14; color: "white" }
+                    Text { text: networkSniffer.totalPackets; font.pixelSize: 28; font.bold: true; color: "white" }
                 }
             }
 
@@ -101,23 +101,11 @@ Rectangle {
                 height: 120
                 radius: 10
                 color: "#e74c3c"
-
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 8
-
-                    Text {
-                        text: "🚫 BLOCKED PACKETS"
-                        font.pixelSize: 14
-                        color: "white"
-                    }
-
-                    Text {
-                        text: root.blockedPackets
-                        font.pixelSize: 28
-                        font.bold: true
-                        color: "white" // Fixed from "arecolor"
-                    }
+                    Text { text: "🚫 BLOCKED PACKETS"; font.pixelSize: 14; color: "white" }
+                    Text { text: root.blockedPackets; font.pixelSize: 28; font.bold: true; color: "white" }
                 }
             }
 
@@ -126,29 +114,30 @@ Rectangle {
                 height: 120
                 radius: 10
                 color: "#2ecc71"
-
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 8
+                    Text { text: "🌐 BANDWIDTH"; font.pixelSize: 14; color: "white" }
+                    Text { text: networkSniffer.bandwidthUsage.toFixed(2) + " KB/s"; font.pixelSize: 28; font.bold: true; color: "white" }
+                }
+            }
 
-                    Text {
-                        text: "🌐 BANDWIDTH"
-                        font.pixelSize: 14
-                        color: "white"
-                    }
-
-                    Text {
-                        text: networkSniffer.bandwidthUsage.toFixed(2) + " KB/s"
-                        font.pixelSize: 28
-                        font.bold: true
-                        color: "white"
-                    }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 120
+                radius: 10
+                color: "#f1c40f"
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    Text { text: "🔒 TOTAL RULES"; font.pixelSize: 14; color: "white" }
+                    Text { text: root.firewallRules.length; font.pixelSize: 28; font.bold: true; color: "white" }
                 }
             }
         }
 
         GroupBox {
-            title: "🚨 Recent Blocked Activity"
+            title: "🚨 Recent Blocked Fraudulent Activity"
             Layout.fillWidth: true
             Layout.fillHeight: true
             font.bold: true
@@ -181,19 +170,8 @@ Rectangle {
 
                         ColumnLayout {
                             spacing: 3
-
-                            Text {
-                                text: model.source + " → " + model.destination
-                                font.pixelSize: 14
-                                font.bold: true
-                                color: "#2c3e50"
-                            }
-
-                            Text {
-                                text: "Protocol: " + model.protocol + " | Blocked by firewall rule"
-                                font.pixelSize: 12
-                                color: "#7f8c8d"
-                            }
+                            Text { text: model.source + " → " + model.destination; font.pixelSize: 14; font.bold: true; color: "#2c3e50" }
+                            Text { text: "Protocol: " + model.protocol + " | Fraudulent Activity Blocked"; font.pixelSize: 12; color: "#7f8c8d" }
                         }
                     }
 
@@ -203,15 +181,11 @@ Rectangle {
                     }
                 }
 
-                ScrollBar.vertical: ScrollBar {
-                    policy: ScrollBar.AlwaysOn
-                }
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
             }
         }
 
-        PacketDetailsWindow {
-            id: packetDetailsWindow1
-        }
+        PacketDetailsWindow { id: packetDetailsWindow1 }
 
         GroupBox {
             title: "🔒 Active Firewall Rules (" + root.firewallRules.length + ")"
@@ -220,17 +194,11 @@ Rectangle {
 
             ColumnLayout {
                 spacing: 8
-
-                Text {
-                    text: "Total Rules: " + root.firewallRules.length
-                    font.pixelSize: 14
-                }
-
+                Text { text: "Total Rules: " + root.firewallRules.length; font.pixelSize: 14 }
                 Repeater {
                     model: root.firewallRules
                     delegate: Text {
-                        text: "• " + modelData.sourceIp + ":" + modelData.port +
-                              " (" + modelData.protocol + ") - " + modelData.action
+                        text: "• " + modelData.sourceIp + ":" + modelData.port + " (" + modelData.protocol + ") - " + modelData.action
                         font.pixelSize: 12
                         color: modelData.action === "Block" ? "#e74c3c" : "#2ecc71"
                     }
@@ -241,17 +209,8 @@ Rectangle {
         Button {
             text: "⬅ Back to Main"
             Layout.alignment: Qt.AlignHCenter
-            background: Rectangle {
-                color: "#7f8c8d"
-                radius: 8
-            }
-            contentItem: Text {
-                text: parent.text
-                color: "white"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            background: Rectangle { color: "#7f8c8d"; radius: 8 }
+            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             onClicked: pageStack.clear()
         }
     }

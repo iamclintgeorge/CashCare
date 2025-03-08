@@ -1,36 +1,19 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import com.example 1.0
 
 Rectangle {
     id: logPage
     visible: false
     color: "#FFFFFF"
 
-    NetworkSniffer {
-        id: networkSniffer
-        onPacketInfoChanged: {
-            if (riskNote !== "No risks detected") {
-                var lines = packetInfo.split("\n");
-                var logEntry = {
-                    packetNumber: networkSniffer.totalPackets,
-                    source: "",
-                    destination: "",
-                    protocol: "",
-                    riskNote: networkSniffer.riskNote,
-                    timestamp: Qt.formatDateTime(new Date(), "yyyy-MM-dd HH:mm:ss")
-                };
+    ListModel {
+        id: logModel
+    }
 
-                for (var i = 0; i < lines.length; i++) {
-                    if (lines[i].includes("Source IP:")) logEntry.source = lines[i].split(":")[1].trim();
-                    else if (lines[i].includes("Destination IP:")) logEntry.destination = lines[i].split(":")[1].trim();
-                    else if (lines[i].includes("Protocol:")) logEntry.protocol = lines[i].split(":")[1].trim();
-                }
-
-                logModel.append(logEntry);
-            }
-        }
+    function addLogEntry(action) {
+        var timestamp = Qt.formatDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+        logModel.append({ "timestamp": timestamp, "action": action });
     }
 
     ColumnLayout {
@@ -39,7 +22,7 @@ Rectangle {
         anchors.margins: 20
 
         Text {
-            text: "Risky/Fraudulent Packet Log"
+            text: "User Activity Log"
             font.family: "Arial"
             font.bold: true
             font.pointSize: 24
@@ -53,7 +36,7 @@ Rectangle {
 
             ListView {
                 id: logList
-                model: ListModel { id: logModel }
+                model: logModel
                 delegate: Rectangle {
                     width: parent.width
                     height: 60
@@ -63,16 +46,14 @@ Rectangle {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 10
-
                         Text {
-                            text: "#" + model.packetNumber + " | " + model.timestamp
+                            text: model.timestamp
                             font.pixelSize: 14
                             font.bold: true
                             color: "#2c3e50"
                         }
-
                         Text {
-                            text: model.source + " → " + model.destination + " (" + model.protocol + ") - " + model.riskNote
+                            text: model.action
                             font.pixelSize: 12
                             color: "#7f8c8d"
                         }
@@ -84,16 +65,8 @@ Rectangle {
         Button {
             text: "⬅ Back to Main"
             Layout.alignment: Qt.AlignHCenter
-            background: Rectangle {
-                color: "#7f8c8d"
-                radius: 8
-            }
-            contentItem: Text {
-                text: parent.text
-                color: "white"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-            }
+            background: Rectangle { color: "#7f8c8d"; radius: 8 }
+            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter }
             onClicked: pageStack.clear()
         }
     }
