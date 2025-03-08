@@ -65,6 +65,7 @@ Rectangle {
         }
     }
 
+    // Rest of the file unchanged (UI layout, etc.)
     ColumnLayout {
         anchors.fill: parent
         spacing: 15
