@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import com.example 1.0
+import CashCare 1.0
 
 Rectangle {
     id: networkSnifferPage

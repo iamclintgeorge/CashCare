@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import com.example 1.0
+import CashCare 1.0
 
 Rectangle {
     id: dashboardPage
@@ -40,7 +40,9 @@ Rectangle {
                 paymentMethod: networkSniffer.paymentMethod,
                 failedAttempts: networkSniffer.failedAttempts,
                 riskNote: networkSniffer.riskNote,
-                geolocation: ""
+                geolocation: "",
+                packetInfo: packetInfo,
+                context: "Analyzing..."
             };
 
             for (var i = 0; i < lines.length; i++) {
@@ -58,14 +60,31 @@ Rectangle {
                 else if (lines[i].includes("Geolocation:")) packet.geolocation = lines[i].split(":")[1].trim();
             }
 
-            if (packet.riskNote === "Fraudulent Activity Detected" && isBlockedByFirewall(packet)) {
+            if (packet.riskNote.includes("High-risk country") ||
+                packet.riskNote.includes("High abuse score") ||
+                packet.source === "185.107.70.202") {
+                if (!isBlockedByFirewall(packet)) {
+                    var rule = { sourceIp: packet.source, port: "any", protocol: packet.protocol || "TCP", action: "Block" };
+                    root.firewallRules = root.firewallRules.concat([rule]);
+                    console.log("Blocked suspicious IP:", packet.source);
+                }
                 blockedPacketsModel.append(packet);
                 root.blockedPackets += 1;
             }
         }
+        onPacketContextUpdated: function(packetNumber, context) {
+            console.log("Received context for packet #:", packetNumber); // Debug
+            console.log("Context:", context); // Debug
+            for (var i = 0; i < blockedPacketsModel.count; i++) {
+                if (blockedPacketsModel.get(i).packetNumber.toString() === packetNumber) {
+                    blockedPacketsModel.setProperty(i, "context", context);
+                    console.log("Updated context at index", i); // Debug
+                    break;
+                }
+            }
+        }
     }
 
-    // Rest of the file unchanged (UI layout, etc.)
     ColumnLayout {
         anchors.fill: parent
         spacing: 15
@@ -153,7 +172,7 @@ Rectangle {
 
                 delegate: Rectangle {
                     width: parent.width
-                    height: 50
+                    height: 70
                     color: index % 2 === 0 ? "#f9f9f9" : "white"
                     radius: 5
 
@@ -171,8 +190,25 @@ Rectangle {
 
                         ColumnLayout {
                             spacing: 3
-                            Text { text: model.source + " → " + model.destination; font.pixelSize: 14; font.bold: true; color: "#2c3e50" }
-                            Text { text: "Protocol: " + model.protocol + " | Fraudulent Activity Blocked"; font.pixelSize: 12; color: "#7f8c8d" }
+                            Layout.fillWidth: true
+                            Text {
+                                text: model.source + " → " + model.destination;
+                                font.pixelSize: 14;
+                                font.bold: true;
+                                color: "#2c3e50"
+                            }
+                            Text {
+                                text: "Protocol: " + model.protocol + " | Fraudulent Activity Blocked";
+                                font.pixelSize: 12;
+                                color: "#7f8c8d"
+                            }
+                            Text {
+                                text: "Context: " + model.context;
+                                font.pixelSize: 12;
+                                color: "#e74c3c";
+                                wrapMode: Text.Wrap;
+                                Layout.fillWidth: true
+                            }
                         }
                     }
 
@@ -211,7 +247,13 @@ Rectangle {
             text: "⬅ Back to Main"
             Layout.alignment: Qt.AlignHCenter
             background: Rectangle { color: "#7f8c8d"; radius: 8 }
-            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            contentItem: Text {
+                text: parent.text;
+                color: "white";
+                font.pixelSize: 14;
+                horizontalAlignment: Text.AlignHCenter;
+                verticalAlignment: Text.AlignVCenter
+            }
             onClicked: pageStack.clear()
         }
     }
