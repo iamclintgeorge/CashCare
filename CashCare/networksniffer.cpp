@@ -18,7 +18,7 @@ NetworkSniffer::NetworkSniffer(QObject *parent)
         }
     });
     connect(m_bandwidthTimer, &QTimer::timeout, this, &NetworkSniffer::updateBandwidth);
-    m_bandwidthTimer->start(1000); // Update bandwidth every second
+    m_bandwidthTimer->start(1000);
     startSniffing();
 }
 
@@ -30,11 +30,80 @@ void NetworkSniffer::startSniffing() {
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t *alldevs;
 
+#ifdef SIMULATION_MODE
+    qDebug() << "Starting simulation mode";
+    m_timer = std::make_unique<QTimer>(this);
+    bool sentFraudulent = false; // Track one-time fraudulent packet
+    connect(m_timer.get(), &QTimer::timeout, this, [this, &sentFraudulent]() {
+        QString packetInfo;
+        if (!sentFraudulent) {
+            // One-time fraudulent packet
+            packetInfo = "Captured IP Packet:\n"
+                         "  Source IP: 185.107.70.202\n"
+                         "  Destination IP: 192.168.1.1\n"
+                         "  Protocol: TCP\n"
+                         "  Source Port: 12345\n"
+                         "  Destination Port: 443\n"
+                         "  Payload Length: 512\n"
+                         "Additional Data:\n"
+                         "  Transaction Amount: $500\n"
+                         "  Payment Method: Credit Card\n"
+                         "  Failed Attempts: 3";
+            m_riskNote = "Risk Analysis: Suspicious IP;";
+            sentFraudulent = true;
+        } else {
+            // Normal packet
+            packetInfo = "Captured IP Packet:\n"
+                         "  Source IP: 192.168.1.100\n"
+                         "  Destination IP: 8.8.8.8\n"
+                         "  Protocol: UDP\n"
+                         "  Source Port: 54321\n"
+                         "  Destination Port: 53\n"
+                         "  Payload Length: 64";
+            m_riskNote = "Risk Analysis: No risks detected";
+        }
+
+        m_packetInfo = packetInfo;
+        m_totalPackets++;
+        m_totalBytes += sentFraudulent ? 64 : 512;
+        emit totalPacketsChanged();
+        emit riskNoteChanged();
+        emit packetInfoChanged();
+
+        if (!sentFraudulent) {
+            QString fullPacketInfo = QString("Captured IP Packet #%1:\n%2\n%3")
+            .arg(m_totalPackets)
+                .arg(m_packetInfo)
+                .arg(m_riskNote);
+            QJsonObject packetJson;
+            packetJson["prompt"] = "Analyze this for financial fraud risk:\n" + fullPacketInfo;
+            QJsonDocument doc(packetJson);
+            QByteArray jsonData = doc.toJson();
+
+            QNetworkRequest request(QUrl("http://localhost:3600/generate"));
+            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QNetworkReply *reply = m_networkManager->post(request, jsonData);
+            connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+                if (reply->error() == QNetworkReply::NoError) {
+                    QString context = reply->readAll().replace("Response: \n", "");
+                    qDebug() << "LLM Context:\n" << context;
+                    emit packetContextUpdated(QString::number(m_totalPackets), context); // Use packet number
+                } else {
+                    qWarning() << "LLM error:" << reply->errorString();
+                    emit packetContextUpdated(QString::number(m_totalPackets), "Error fetching context");
+                }
+                reply->deleteLater();
+            });
+        }
+    });
+    m_timer->start(5000);
+    return;
+#endif
+
     if (pcap_findalldevs(&alldevs, errbuf) == -1) {
         qWarning() << "Error finding devices:" << errbuf;
         return;
     }
-
     pcap_if_t *selectedDevice = alldevs;
     const char *device = selectedDevice->name;
     qDebug() << "Sniffing on device:" << device;
@@ -72,7 +141,7 @@ void NetworkSniffer::capturePacket() {
         m_packetInfo = parser.parsePacket(header, packetData);
         if (!m_packetInfo.contains("Not an IP packet") && !m_packetInfo.contains("Packet too short")) {
             m_totalPackets++;
-            m_totalBytes += header->len; // Accumulate packet size
+            m_totalBytes += header->len;
             emit totalPacketsChanged();
 
             QStringList lines = m_packetInfo.split("\n");
@@ -116,29 +185,35 @@ void NetworkSniffer::capturePacket() {
                 threatRequest.setRawHeader("Key", "7a1c9986e975911f7f1272714213961646a4f57afe14cd870342ef8342d851eac5e17616841f544e");
                 threatRequest.setRawHeader("Accept", "application/json");
                 m_networkManager->get(threatRequest);
-            }
 
-            if (!sourceIp.isEmpty()) {
                 QUrl geoUrl("http://ip-api.com/json/" + sourceIp + "?fields=country,city");
                 m_networkManager->get(QNetworkRequest(geoUrl));
             }
 
-            QJsonObject packetJson;
-            packetJson["prompt"] = "Analyze this for financial fraud risk:\n" + fullPacketInfo;
-            QJsonDocument doc(packetJson);
-            QByteArray jsonData = doc.toJson();
+            bool isFraudulent = m_riskNote.contains("High-risk country") ||
+                                m_riskNote.contains("High abuse score") ||
+                                sourceIp == "185.107.70.202";
+            if (isFraudulent) {
+                QJsonObject packetJson;
+                packetJson["prompt"] = "Analyze this for financial fraud risk:\n" + fullPacketInfo;
+                QJsonDocument doc(packetJson);
+                QByteArray jsonData = doc.toJson();
 
-            QNetworkRequest request(QUrl("http://localhost:3600/generate"));
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-            QNetworkReply *reply = m_networkManager->post(request, jsonData);
-            connect(reply, &QNetworkReply::finished, this, [reply]() {
-                if (reply->error() == QNetworkReply::NoError) {
-                    qDebug() << "Server Response:\n" << reply->readAll();
-                } else {
-                    qWarning() << "Server error:" << reply->errorString();
-                }
-                reply->deleteLater();
-            });
+                QNetworkRequest request(QUrl("http://localhost:3600/generate"));
+                request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+                QNetworkReply *reply = m_networkManager->post(request, jsonData);
+                connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+                    if (reply->error() == QNetworkReply::NoError) {
+                        QString context = reply->readAll().replace("Response: \n", "");
+                        qDebug() << "LLM Context:\n" << context;
+                        emit packetContextUpdated(QString::number(m_totalPackets), context);
+                    } else {
+                        qWarning() << "LLM error:" << reply->errorString();
+                        emit packetContextUpdated(QString::number(m_totalPackets), "Error fetching context");
+                    }
+                    reply->deleteLater();
+                });
+            }
 
             emit packetInfoChanged();
             emit riskNoteChanged();
@@ -183,9 +258,8 @@ void NetworkSniffer::handleThreatReply(QNetworkReply *reply) {
 }
 
 void NetworkSniffer::updateBandwidth() {
-    // Calculate bandwidth in KB/s (bytes per second / 1024)
-    qreal bytesPerSecond = m_totalBytes / 1.0; // 1-second interval
+    qreal bytesPerSecond = m_totalBytes / 1.0;
     m_bandwidthUsage = bytesPerSecond / 1024.0;
-    m_totalBytes = 0; // Reset after calculation
+    m_totalBytes = 0;
     emit bandwidthUsageChanged();
 }

@@ -17,7 +17,7 @@ class NetworkSniffer : public QObject {
     Q_PROPERTY(QString paymentMethod READ paymentMethod NOTIFY paymentMethodChanged)
     Q_PROPERTY(int failedAttempts READ failedAttempts NOTIFY failedAttemptsChanged)
     Q_PROPERTY(QString riskNote READ riskNote NOTIFY riskNoteChanged)
-    Q_PROPERTY(qreal bandwidthUsage READ bandwidthUsage NOTIFY bandwidthUsageChanged) // New property
+    Q_PROPERTY(qreal bandwidthUsage READ bandwidthUsage NOTIFY bandwidthUsageChanged)
 
 public:
     explicit NetworkSniffer(QObject *parent = nullptr);
@@ -43,12 +43,13 @@ signals:
     void failedAttemptsChanged();
     void riskNoteChanged();
     void bandwidthUsageChanged();
+    void packetContextUpdated(const QString &packetInfo, const QString &context); // New signal
 
 private slots:
     void capturePacket();
     void handleGeoReply(QNetworkReply *reply);
     void handleThreatReply(QNetworkReply *reply);
-    void updateBandwidth(); // New slot
+    void updateBandwidth();
 
 private:
     pcap_t *m_pcapHandle;
@@ -62,9 +63,8 @@ private:
     int m_failedAttempts = 0;
     QString m_riskNote = "No risks detected";
     QMap<QString, int> m_ipConnectionCount;
-    qreal m_bandwidthUsage = 0.0; // KB/s
-    quint64 m_totalBytes = 0;     // Total bytes captured
-    QTimer *m_bandwidthTimer;     // Timer for bandwidth updates
+    qreal m_bandwidthUsage = 0.0;
+    quint64 m_totalBytes = 0;
+    QTimer *m_bandwidthTimer;
 };
-
 #endif
