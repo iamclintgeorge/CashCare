@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDateTime>
+#include <QTimer>
 
 NetworkSniffer::NetworkSniffer(QObject *parent)
     : QObject(parent), m_pcapHandle(nullptr), m_networkManager(new QNetworkAccessManager(this)),
@@ -31,75 +32,86 @@ void NetworkSniffer::startSniffing() {
     pcap_if_t *alldevs;
 
 #ifdef SIMULATION_MODE
-    qDebug() << "Starting simulation mode";
-    m_timer = std::make_unique<QTimer>(this);
-    bool sentFraudulent = false; // Track one-time fraudulent packet
-    connect(m_timer.get(), &QTimer::timeout, this, [this, &sentFraudulent]() {
-        QString packetInfo;
-        if (!sentFraudulent) {
-            // One-time fraudulent packet
-            packetInfo = "Captured IP Packet:\n"
-                         "  Source IP: 185.107.70.202\n"
-                         "  Destination IP: 192.168.1.1\n"
-                         "  Protocol: TCP\n"
-                         "  Source Port: 12345\n"
-                         "  Destination Port: 443\n"
-                         "  Payload Length: 512\n"
-                         "Additional Data:\n"
-                         "  Transaction Amount: $500\n"
-                         "  Payment Method: Credit Card\n"
-                         "  Failed Attempts: 3";
-            m_riskNote = "Risk Analysis: Suspicious IP;";
-            sentFraudulent = true;
-        } else {
-            // Normal packet
-            packetInfo = "Captured IP Packet:\n"
-                         "  Source IP: 192.168.1.100\n"
-                         "  Destination IP: 8.8.8.8\n"
-                         "  Protocol: UDP\n"
-                         "  Source Port: 54321\n"
-                         "  Destination Port: 53\n"
-                         "  Payload Length: 64";
-            m_riskNote = "Risk Analysis: No risks detected";
-        }
+    qDebug() << "Starting with one simulated fraudulent packet";
 
-        m_packetInfo = packetInfo;
-        m_totalPackets++;
-        m_totalBytes += sentFraudulent ? 64 : 512;
+    // Delay simulation slightly to ensure QML is ready
+    QTimer::singleShot(500, this, [this]() {
+        QString fakePacket = "Captured IP Packet:\n"
+                             "  Source IP: 185.107.70.202\n"
+                             "  Destination IP: 192.168.1.1\n"
+                             "  Protocol: TCP\n"
+                             "  Source Port: 12345\n"
+                             "  Destination Port: 443\n"
+                             "  Payload Length: 512\n"
+                             "Additional Data:\n"
+                             "  Transaction Amount: $500\n"
+                             "  Payment Method: Credit Card\n"
+                             "  Failed Attempts: 3";
+        m_packetInfo = fakePacket;
+        m_totalPackets = 1;
+        m_totalBytes += 512;
+        m_riskNote = "Risk Analysis: Suspicious IP;";
+        qDebug() << "Simulated Packet Info:\n" << m_packetInfo;
+        qDebug() << "Total Packets:" << m_totalPackets;
+        qDebug() << "Risk Note:" << m_riskNote;
         emit totalPacketsChanged();
         emit riskNoteChanged();
         emit packetInfoChanged();
 
-        if (!sentFraudulent) {
-            QString fullPacketInfo = QString("Captured IP Packet #%1:\n%2\n%3")
-            .arg(m_totalPackets)
-                .arg(m_packetInfo)
-                .arg(m_riskNote);
-            QJsonObject packetJson;
-            packetJson["prompt"] = "Analyze this for financial fraud risk:\n" + fullPacketInfo;
-            QJsonDocument doc(packetJson);
-            QByteArray jsonData = doc.toJson();
+        QString fullPacketInfo = QString("Captured IP Packet #%1:\n%2\n%3")
+                                     .arg(m_totalPackets)
+                                     .arg(m_packetInfo)
+                                     .arg(m_riskNote);
+        qDebug() << "Full Packet Info for LLM:\n" << fullPacketInfo;
 
-            QNetworkRequest request(QUrl("http://localhost:3600/generate"));
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-            QNetworkReply *reply = m_networkManager->post(request, jsonData);
-            connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-                if (reply->error() == QNetworkReply::NoError) {
-                    QString context = reply->readAll().replace("Response: \n", "");
-                    qDebug() << "LLM Context:\n" << context;
-                    emit packetContextUpdated(QString::number(m_totalPackets), context); // Use packet number
-                } else {
-                    qWarning() << "LLM error:" << reply->errorString();
-                    emit packetContextUpdated(QString::number(m_totalPackets), "Error fetching context");
-                }
-                reply->deleteLater();
-            });
-        }
+        QJsonObject packetJson;
+        packetJson["prompt"] = "Analyze this for financial fraud risk:\n" + fullPacketInfo;
+        QJsonDocument doc(packetJson);
+        QByteArray jsonData = doc.toJson();
+
+        QNetworkRequest request(QUrl("http://localhost:3600/generate"));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = m_networkManager->post(request, jsonData);
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                QString context = reply->readAll().replace("Response: \n", "");
+                qDebug() << "LLM Context:\n" << context;
+                emit packetContextUpdated(QString::number(m_totalPackets), context);
+            } else {
+                qWarning() << "LLM error:" << reply->errorString();
+                emit packetContextUpdated(QString::number(m_totalPackets), "Error fetching context");
+            }
+            reply->deleteLater();
+        });
     });
-    m_timer->start(5000);
-    return;
-#endif
 
+    // Start real sniffing after a longer delay
+    QTimer::singleShot(1000, this, [this]() {
+        char errbuf[PCAP_ERRBUF_SIZE];
+        pcap_if_t *alldevs;
+
+        if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+            qWarning() << "Error finding devices:" << errbuf;
+            return;
+        }
+        pcap_if_t *selectedDevice = alldevs;
+        const char *device = selectedDevice->name;
+        qDebug() << "Switching to real sniffing on device:" << device;
+
+        m_pcapHandle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
+        if (!m_pcapHandle) {
+            qWarning() << "Failed to open device:" << errbuf;
+            pcap_freealldevs(alldevs);
+            return;
+        }
+
+        m_timer = std::make_unique<QTimer>(this);
+        connect(m_timer.get(), &QTimer::timeout, this, &NetworkSniffer::capturePacket);
+        m_timer->start(1000);
+        pcap_freealldevs(alldevs);
+    });
+    return;
+#else
     if (pcap_findalldevs(&alldevs, errbuf) == -1) {
         qWarning() << "Error finding devices:" << errbuf;
         return;
@@ -120,6 +132,7 @@ void NetworkSniffer::startSniffing() {
     m_timer->start(1000);
 
     pcap_freealldevs(alldevs);
+#endif
 }
 
 void NetworkSniffer::stopSniffing() {
