@@ -105,6 +105,10 @@ app.get('/api/protected', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
 
+// Import and use the username route
+const getUsername = require("./api/username");
+app.get("/api/username", authenticateToken, getUsername); // Protect the route and use the handler
+
 app.listen(3001, () => {
   console.log('Server is running on http://localhost:3001');
 });
