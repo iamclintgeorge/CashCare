@@ -18,7 +18,14 @@ ApplicationWindow {
     property var firewallRules: [] // Implicitly provides firewallRulesChanged signal
     property int totalPackets: 0
     property int blockedPackets: 0
-    property real bandwidthUsage: 0.0
+    property real bandwidth: 0.0 // Changed from bandwidthUsage to match NetworkSniffer
+
+    // Shared NetworkSniffer instance
+    NetworkSniffer {
+        id: sharedSniffer
+        onTotalPacketsChanged: root.totalPackets = sharedSniffer.totalPackets
+        onBandwidthChanged: root.bandwidth = sharedSniffer.bandwidth // Updated to use bandwidth
+    }
 
     function checkInternetConnection() {
         var xhr = new XMLHttpRequest()
@@ -110,10 +117,24 @@ ApplicationWindow {
             initialItem: dashboardPage
         }
 
-        DashboardPage { id: dashboardPage; visible: false }
-        FirewallRulesetPage { id: firewallRulesetPage; visible: false }
-        NetworkSnifferPage { id: networkSnifferPage; visible: false }
-        LogPage { id: logPage; visible: false } // Added LogPage as per your recent request
+        DashboardPage {
+            id: dashboardPage
+            visible: false
+            sniffer: sharedSniffer  // Pass shared instance
+        }
+        FirewallRulesetPage {
+            id: firewallRulesetPage
+            visible: false
+        }
+        NetworkSnifferPage {
+            id: networkSnifferPage
+            visible: false
+            sniffer: sharedSniffer  // Pass shared instance
+        }
+        LogPage {
+            id: logPage
+            visible: false
+        }
 
         Connections {
             target: sidebar
@@ -121,7 +142,7 @@ ApplicationWindow {
                 if (page === "dashboard") pageStack.replace(dashboardPage)
                 else if (page === "firewall") pageStack.replace(firewallRulesetPage)
                 else if (page === "sniffer") pageStack.replace(networkSnifferPage)
-                else if (page === "log") pageStack.replace(logPage) // Added log page navigation
+                else if (page === "log") pageStack.replace(logPage)
             }
         }
     }

@@ -17,7 +17,9 @@ class NetworkSniffer : public QObject {
     Q_PROPERTY(QString paymentMethod READ paymentMethod NOTIFY paymentMethodChanged)
     Q_PROPERTY(int failedAttempts READ failedAttempts NOTIFY failedAttemptsChanged)
     Q_PROPERTY(QString riskNote READ riskNote NOTIFY riskNoteChanged)
-    Q_PROPERTY(qreal bandwidthUsage READ bandwidthUsage NOTIFY bandwidthUsageChanged)
+    Q_PROPERTY(qreal bandwidth READ bandwidth NOTIFY bandwidthChanged) // Changed to match cpp
+    Q_PROPERTY(QString geoInfo READ geoInfo NOTIFY geoInfoChanged)     // Added for geolocation
+    Q_PROPERTY(QString threatLevel READ threatLevel NOTIFY threatLevelChanged) // Added for threat level
 
 public:
     explicit NetworkSniffer(QObject *parent = nullptr);
@@ -29,7 +31,9 @@ public:
     QString paymentMethod() const { return m_paymentMethod; }
     int failedAttempts() const { return m_failedAttempts; }
     QString riskNote() const { return m_riskNote; }
-    qreal bandwidthUsage() const { return m_bandwidthUsage; }
+    qreal bandwidth() const { return m_bandwidth; }       // Changed from bandwidthUsage
+    QString geoInfo() const { return m_geoInfo; }         // Added
+    QString threatLevel() const { return m_threatLevel; } // Added
 
 public slots:
     void startSniffing();
@@ -42,8 +46,10 @@ signals:
     void paymentMethodChanged();
     void failedAttemptsChanged();
     void riskNoteChanged();
-    void bandwidthUsageChanged();
-    void packetContextUpdated(const QString &packetInfo, const QString &context); // New signal
+    void bandwidthChanged();           // Changed from bandwidthUsageChanged
+    void geoInfoChanged();             // Added
+    void threatLevelChanged();         // Added
+    void packetContextUpdated(const QString &packetInfo, const QString &context);
 
 private slots:
     void capturePacket();
@@ -63,8 +69,13 @@ private:
     int m_failedAttempts = 0;
     QString m_riskNote = "No risks detected";
     QMap<QString, int> m_ipConnectionCount;
-    qreal m_bandwidthUsage = 0.0;
+    qreal m_bandwidth = 0.0;            // Changed from m_bandwidthUsage
+    QString m_geoInfo;                  // Added
+    QString m_threatLevel;              // Added
     quint64 m_totalBytes = 0;
     QTimer *m_bandwidthTimer;
+    qint64 m_lastBandwidthTime = 0;     // Added for bandwidth calculation
+    quint64 m_lastBandwidthBytes = 0;   // Added for bandwidth calculation
 };
-#endif
+
+#endif // NETWORKSNIFFER_H
