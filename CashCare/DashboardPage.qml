@@ -1,12 +1,15 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+// DashboardPage.qml
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import CashCare 1.0
 
 Rectangle {
     id: dashboardPage
     visible: false
     color: "#FFFFFF"
+
+    property NetworkSniffer sniffer
 
     function isBlockedByFirewall(packet) {
         for (var i = 0; i < root.firewallRules.length; i++) {
@@ -19,15 +22,15 @@ Rectangle {
         return false;
     }
 
-    NetworkSniffer {
-        id: networkSniffer
-        onPacketInfoChanged: {
-            console.log("Packet Info Changed:\n" + packetInfo); // Debug
-            console.log("Risk Note: " + riskNote); // Debug
-            console.log("Total Packets: " + totalPackets); // Debug
-            var lines = packetInfo.split("\n");
+    Connections {
+        target: sniffer
+        function onPacketInfoChanged() {
+            console.log("Packet Info Changed:\n" + sniffer.packetInfo);
+            console.log("Risk Note: " + sniffer.riskNote);
+            console.log("Total Packets: " + sniffer.totalPackets);
+            var lines = sniffer.packetInfo.split("\n");
             var packet = {
-                packetNumber: networkSniffer.totalPackets,
+                packetNumber: sniffer.totalPackets,
                 sourceMac: "",
                 destMac: "",
                 source: "",
@@ -39,13 +42,13 @@ Rectangle {
                 windowSize: "",
                 protocolDetected: "",
                 payloadLength: "0",
-                transactionAmount: networkSniffer.transactionAmount,
-                paymentMethod: networkSniffer.paymentMethod,
-                failedAttempts: networkSniffer.failedAttempts,
-                riskNote: networkSniffer.riskNote,
+                transactionAmount: sniffer.transactionAmount,
+                paymentMethod: sniffer.paymentMethod,
+                failedAttempts: sniffer.failedAttempts,
+                riskNote: sniffer.riskNote,
                 geolocation: "",
-                packetInfo: packetInfo,
-                context: "Analyzing..."
+                packetInfo: sniffer.packetInfo,
+                context: "analyzing..."
             };
 
             for (var i = 0; i < lines.length; i++) {
@@ -65,6 +68,7 @@ Rectangle {
 
             if (packet.riskNote.includes("High-risk country") ||
                 packet.riskNote.includes("High abuse score") ||
+                packet.riskNote.includes("ML Fraud Prediction: Fraud") ||
                 packet.source === "185.107.70.202") {
                 if (!isBlockedByFirewall(packet)) {
                     var rule = { sourceIp: packet.source, port: "any", protocol: packet.protocol || "TCP", action: "Block" };
@@ -73,18 +77,31 @@ Rectangle {
                 }
                 blockedPacketsModel.append(packet);
                 root.blockedPackets += 1;
-                console.log("Added to blockedPacketsModel: Packet #" + packet.packetNumber); // Debug
+                console.log("Added to blockedPacketsModel: Packet #" + packet.packetNumber);
+                console.log("Current blockedPacketsModel count:", blockedPacketsModel.count);
+            } else {
+                console.log("Packet #" + packet.packetNumber + " not added to blockedPacketsModel (no fraud conditions met)");
             }
         }
-        onPacketContextUpdated: function(packetNumber, context) {
-            console.log("Received context for packet #:", packetNumber);
-            console.log("Context:", context);
+        function onPacketContextUpdated(packetNumber, context) {
+            console.log("DashboardPage: Received context for packet #:" + packetNumber + ": " + context);
+            console.log("blockedPacketsModel count before update:", blockedPacketsModel.count);
+            var found = false;
             for (var i = 0; i < blockedPacketsModel.count; i++) {
-                if (blockedPacketsModel.get(i).packetNumber.toString() === packetNumber) {
+                var modelPacketNumber = blockedPacketsModel.get(i).packetNumber.toString();
+                console.log("Checking packet at index", i, "with number:", modelPacketNumber);
+                if (modelPacketNumber === packetNumber) {
                     blockedPacketsModel.setProperty(i, "context", context);
-                    console.log("Updated context at index", i);
+                    console.log("DashboardPage: Updated context at index", i);
+                    // Force UI refresh
+                    recentActivityList.model = null;
+                    recentActivityList.model = blockedPacketsModel;
+                    found = true;
                     break;
                 }
+            }
+            if (!found) {
+                console.log("DashboardPage: No matching packet found for #" + packetNumber);
             }
         }
     }
@@ -116,7 +133,7 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 8
                     Text { text: "📦 TOTAL PACKETS"; font.pixelSize: 14; color: "white" }
-                    Text { text: networkSniffer.totalPackets; font.pixelSize: 28; font.bold: true; color: "white" }
+                    Text { text: sniffer.totalPackets; font.pixelSize: 28; font.bold: true; color: "white" }
                 }
             }
 
@@ -142,7 +159,7 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 8
                     Text { text: "🌐 BANDWIDTH"; font.pixelSize: 14; color: "white" }
-                    Text { text: networkSniffer.bandwidthUsage.toFixed(2) + " KB/s"; font.pixelSize: 28; font.bold: true; color: "white" }
+                    Text { text: sniffer.bandwidth.toFixed(2) + " KB/s"; font.pixelSize: 28; font.bold: true; color: "white" }
                 }
             }
 
@@ -218,7 +235,7 @@ Rectangle {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: packetDetailsWindow1.showDetails1(model)
+                        onClicked: packetDetailsWindow.showDetails1(model)
                     }
                 }
 
@@ -226,7 +243,7 @@ Rectangle {
             }
         }
 
-        PacketDetailsWindow { id: packetDetailsWindow1 }
+        PacketDetailsWindow { id: packetDetailsWindow }
 
         GroupBox {
             title: "🔒 Active Firewall Rules (" + root.firewallRules.length + ")"
@@ -263,6 +280,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        console.log("DashboardPage loaded"); // Debug
+        console.log("DashboardPage loaded");
     }
 }
