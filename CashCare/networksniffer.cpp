@@ -20,7 +20,7 @@ NetworkSniffer::NetworkSniffer(QObject *parent)
         }
     });
     connect(m_bandwidthTimer, &QTimer::timeout, this, &NetworkSniffer::updateBandwidth);
-    m_bandwidthTimer->start(5000);
+    m_bandwidthTimer->start(3000);
 
     // Delay startSniffing to ensure QML connections are established
     QTimer::singleShot(2000, this, &NetworkSniffer::startSniffing);
@@ -55,43 +55,31 @@ void NetworkSniffer::startSniffing() {
     QJsonObject txnJson;
     QDateTime now = QDateTime::currentDateTime();
     txnJson["amt"] = 500.0;
-    txnJson["merchant"] = "unknown";
-    txnJson["category"] = "misc";
+    txnJson["merchant"] = "Tichkule&TichkuleCo";
+    txnJson["category"] = "electronics";
     txnJson["gender"] = "unknown";
     txnJson["job"] = "unknown";
     txnJson["city"] = "unknown";
     txnJson["state"] = "unknown";
-    txnJson["lat"] = 0.0;
-    txnJson["long"] = 0.0;
-    txnJson["city_pop"] = 0;
+    txnJson["lat"] = 40.7128;
+    txnJson["long"] = -74.0060;
+    txnJson["city_pop"] = 100;
     txnJson["unix_time"] = now.toSecsSinceEpoch();
-    txnJson["merch_lat"] = 0.0;
-    txnJson["merch_long"] = 0.0;
+    txnJson["merch_lat"] = 34.0522;
+    txnJson["merch_long"] = -118.2437;
     txnJson["age"] = 0;
-    txnJson["distance"] = 0.0;
-    txnJson["day_of_week"] = now.date().dayOfWeek(); // 1-7 (Mon-Sun)
-    txnJson["hour"] = now.time().hour();             // 0-23
-    txnJson["month"] = now.date().month();           // 1-12
-    txnJson["zip"] = "00000";                        // Placeholder
+    txnJson["distance"] = 2700.0;
+    txnJson["day_of_week"] = now.date().dayOfWeek();
+    txnJson["hour"] = now.time().hour();
+    txnJson["month"] = now.date().month();
+    txnJson["zip"] = "99999";
     QString jsonStr = QString(QJsonDocument(txnJson).toJson(QJsonDocument::Compact));
 
-    QProcess process;
-    process.start("python3", QStringList() << "/home/clint/Desktop/cashcare/CashCare/ml_predict.py" << jsonStr);
-    process.waitForFinished(2000);
-    QString mlOutput = process.readAllStandardOutput().trimmed();
-    qDebug() << "ML Output:" << mlOutput;
-    QString mlError = process.readAllStandardError().trimmed();
-    qDebug() << "ML Error:" << mlError;
-    QStringList mlResult = mlOutput.split(",");
-    bool isFraudulent = false;
-    float fraudProb = 0.0;
-    if (mlResult.size() == 2 && !mlResult[0].isEmpty()) {
-        isFraudulent = mlResult[0].toInt() == 1;
-        fraudProb = mlResult[1].toFloat();
-        m_riskNote = QString("ML Fraud Prediction: %1 (Prob: %2); ").arg(isFraudulent ? "Fraud" : "Non-Fraud").arg(fraudProb, 0, 'f', 2);
-    } else {
-        m_riskNote = "ML Error; ";
-    }
+    // Simulate ML prediction for testing (hardcoded fraud)
+    bool isFraudulent = true;
+    float fraudProb = 0.95;
+    m_riskNote = QString("ML Fraud Prediction: %1 (Prob: %2); ").arg(isFraudulent ? "Fraud" : "Non-Fraud").arg(fraudProb, 0, 'f', 2);
+    qDebug() << "Simulated ML Output: 1,0.95 (hardcoded for simulation)";
 
     emit totalPacketsChanged();
     emit riskNoteChanged();
@@ -126,7 +114,7 @@ void NetworkSniffer::startSniffing() {
 
         m_timer = std::make_unique<QTimer>(this);
         connect(m_timer.get(), &QTimer::timeout, this, &NetworkSniffer::capturePacket);
-        m_timer->start(5000);
+        m_timer->start(3000);
         pcap_freealldevs(alldevs);
     });
 #else
@@ -147,7 +135,7 @@ void NetworkSniffer::startSniffing() {
 
     m_timer = std::make_unique<QTimer>(this);
     connect(m_timer.get(), &QTimer::timeout, this, &NetworkSniffer::capturePacket);
-    m_timer->start(5000);
+    m_timer->start(3000);
     pcap_freealldevs(alldevs);
 #endif
 }
