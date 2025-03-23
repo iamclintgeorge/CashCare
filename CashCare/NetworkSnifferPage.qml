@@ -174,121 +174,421 @@ Rectangle {
             }
         }
 
-        ListView {
-            id: packetListView
+        // Table Container with proper scrolling
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            spacing: 1
+            border.color: "#D0D0D0"
 
-            header: Rectangle {
-                width: packetListView.width
-                height: 40
-                color: "#4A90E2"
-                Row {
-                    spacing: 1
+            ScrollView {
+                id: tableScrollView
+                anchors.fill: parent
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+
+                Item {
+                    // Make this wider than the view to allow horizontal scrolling
+                    width: Math.max(1400, tableScrollView.width)
+                    height: headerRect.height + packetListView.contentHeight
+
+                    // Fixed header
                     Rectangle {
-                        width: 160
+                        id: headerRect
+                        width: parent.width
                         height: 40
-                        color: "transparent"
-                        Text {
-                            text: "Time"
-                            anchors.centerIn: parent
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: "#FFFFFF"
-                            elide: Text.ElideRight
-                        }
-                    }
-                    Repeater {
-                        model: ["Source", "Destination", "Protocol", "Source Port", "Dest Port",
-                                "Length", "Geolocation", "Threat", "Amount",
-                                "Payment", "Failed", "Risk Note"]
-                        delegate: Rectangle {
-                            width: (packetListView.width - 160) / 12
-                            height: 40
-                            color: "transparent"
-                            Text {
-                                text: modelData
-                                anchors.centerIn: parent
-                                font.pixelSize: 14
-                                font.bold: true
-                                color: "#FFFFFF"
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
-                }
-            }
+                        color: "#4A90E2"
 
-            model: ListModel {
-                id: packetModel
-            }
+                        Row {
+                            anchors.fill: parent
 
-            delegate: Rectangle {
-                width: packetListView.width
-                height: 40
-                color: {
-                    // Highlight fraudulent transactions
-                    if (riskNote && riskNote.includes("ML Fraud Prediction: Fraud")) {
-                        return "#FFEBEE"; // Light red background for fraudulent transactions
-                    } else {
-                        return index % 2 === 0 ? "#F5F5F5" : "#E0E0E0";
-                    }
-                }
-                border.color: "#D0D0D0"
-
-                Row {
-                    spacing: 1
-                    Rectangle {
-                        width: 160
-                        height: 40
-                        color: "transparent"
-                        Text {
-                            text: time
-                            anchors.centerIn: parent
-                            font.pixelSize: 12
-                            color: "#333333"
-                            elide: Text.ElideRight
-                        }
-                    }
-                    Repeater {
-                        model: [source, destination, protocol, sourcePort, destinationPort, payloadLength,
-                                geolocation, threatLevel, transactionAmount, paymentMethod, failedAttempts, riskNote]
-                        delegate: Rectangle {
-                            width: (packetListView.width - 160) / 12
-                            height: 40
-                            color: "transparent"
-                            Text {
-                                text: modelData
-                                anchors.centerIn: parent
-                                font.pixelSize: 12
-                                color: {
-                                    if (index === 7 && modelData === "High") return "#FF5252"; // Threat level
-                                    if (index === 7 && modelData === "Medium") return "#FFA726";
-                                    if (index === 11 && modelData.includes("Fraud")) return "#FF5252"; // Risk note
-                                    return "#333333";
+                            // Column headers with fixed widths
+                            Rectangle {
+                                width: 120
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Time"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
                                 }
-                                elide: Text.ElideRight
+                            }
+
+                            Rectangle {
+                                width: 120
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Source"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 120
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Destination"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Protocol"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Source Port"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Dest Port"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 80
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Length"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 140
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Geolocation"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Threat"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Amount"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 100
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Payment"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 80
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Failed"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Rectangle {
+                                width: 240
+                                height: parent.height
+                                color: "transparent"
+                                Text {
+                                    text: "Risk Note"
+                                    anchors.centerIn: parent
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: "#FFFFFF"
+                                }
+                            }
+                        }
+                    }
+
+                    // Data rows
+                    ListView {
+                        id: packetListView
+                        anchors.top: headerRect.bottom
+                        width: parent.width
+                        height: tableScrollView.height - headerRect.height
+                        model: ListModel { id: packetModel }
+                        clip: true
+
+                        delegate: Rectangle {
+                            width: packetListView.width
+                            height: 40
+                            // Always white background unless fraudulent
+                            color: {
+                                if (riskNote && riskNote.includes("ML Fraud Prediction: Fraud")) {
+                                    return "#FFEBEE";  // Light red for fraudulent
+                                } else {
+                                    return "#FFFFFF";  // White for all other rows
+                                }
+                            }
+                            border.color: "#D0D0D0"
+
+                            Row {
+                                anchors.fill: parent
+
+                                // Time column
+                                Rectangle {
+                                    width: 120
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: time
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Source IP column
+                                Rectangle {
+                                    width: 120
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: source
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Destination IP column
+                                Rectangle {
+                                    width: 120
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: destination
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Protocol column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: protocol
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Source Port column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: sourcePort
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Destination Port column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: destinationPort
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Length column
+                                Rectangle {
+                                    width: 80
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: payloadLength
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Geolocation column
+                                Rectangle {
+                                    width: 140
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: geolocation
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                // Threat Level column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: threatLevel
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: {
+                                            if (threatLevel === "High") return "#FF5252";
+                                            if (threatLevel === "Medium") return "#FFA726";
+                                            return "#333333";
+                                        }
+                                    }
+                                }
+
+                                // Transaction Amount column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: transactionAmount
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Payment Method column
+                                Rectangle {
+                                    width: 100
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: paymentMethod
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Failed Attempts column
+                                Rectangle {
+                                    width: 80
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: failedAttempts
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: "#333333"
+                                    }
+                                }
+
+                                // Risk Note column
+                                Rectangle {
+                                    width: 240
+                                    height: parent.height
+                                    color: "transparent"
+                                    Text {
+                                        text: riskNote
+                                        anchors.centerIn: parent
+                                        font.pixelSize: 12
+                                        color: riskNote && riskNote.includes("Fraud") ? "#FF5252" : "#333333"
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: parent.color = riskNote && riskNote.includes("ML Fraud Prediction: Fraud") ? "#FFD6D6" : "#F5F5F5"
+                                onExited: parent.color = riskNote && riskNote.includes("ML Fraud Prediction: Fraud") ? "#FFEBEE" : "#FFFFFF"
+                                onClicked: {
+                                    packetDetailsWindow.visible = true;
+                                    packetDetailsWindow.loadPacketDetails(model);
+                                }
                             }
                         }
                     }
                 }
-
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: parent.color = riskNote && riskNote.includes("ML Fraud Prediction: Fraud") ? "#FFD6D6" : "#D0E0F0"
-                    onExited: parent.color = riskNote && riskNote.includes("ML Fraud Prediction: Fraud") ? "#FFEBEE" : (index % 2 === 0 ? "#F5F5F5" : "#E0E0E0")
-                    onClicked: {
-                        packetDetailsWindow.visible = true;
-                        packetDetailsWindow.loadPacketDetails(model);
-                    }
-                }
             }
-
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
-            ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AlwaysOn }
         }
 
         Button {
@@ -296,6 +596,7 @@ Rectangle {
             font.family: "Arial"
             font.pointSize: 12
             Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 10
             onClicked: pageStack.replace(dashboardPage)
         }
     }
