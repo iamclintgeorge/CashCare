@@ -24,8 +24,9 @@ def classify_packet(packet_json):
                 if 'Unknown' not in label_encoders[col].classes_:
                     df[col] = df[col].replace('Unknown', label_encoders[col].classes_[0])
                 df[col] = label_encoders[col].transform(df[col])
-
+         # Handle missing values for numerical features using the trained imputer
         df[numerical_cols] = imputer.transform(df[numerical_cols])
+         # Normalize numerical features using the trained scaler
         df[numerical_cols] = scaler.transform(df[numerical_cols])
 
         y_pred_proba = model.predict_proba(df)[:, 1]
