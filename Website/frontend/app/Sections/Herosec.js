@@ -1,40 +1,31 @@
-'use client';
+"use client";
 import React from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 const Herosec = () => {
-
-  const router = useRouter(); // Initialize the router
-
-  const handleGetStarted = () => {
-    router.push('/Login'); // Redirect to the login page
-  };
-
+  const router = useRouter();
 
   return (
     <>
-      {/* <div>Hello Welcome to Hero Section</div> */}
-      {/* for styling directly size={60} */}
       <div className="place-content-center text-center bg-gray-200">
         <main className="flex flex-col items-center justify-center h-screen text-center ">
           <h2 className="text-6xl font-bold mb-5">
             <span className="text-black">
-              Find clients who <br></br>just raised
+              Protect Your Network <br></br>with
             </span>{" "}
-            <span className="text-orange-800">Venture Capital</span>
+            <span className="text-orange-800">CashCare</span>
           </h2>
           <p className="mt-4 mb-5 text-base text-black">
-            Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit. Vestibulum
-            Ac Ultricies Libero,<br></br> Vitae Commodo Dolor. Sed Fermentum
-            Semper Ex A Varius.
+            Real-time protection from fake banking sites, phishing IPs, and
+            suspicious traffic. <br />
+            Stay one step ahead of cyber threats—automatically and effortlessly.
           </p>
-          {/* <button className="mt-5 px-4 py-2 bg-gray-800 text-white rounded">
-          <a href="/get-started">GET STARTED</a>
-        </button> */}
-          <button  onClick={handleGetStarted} className="mt-5 px-7 py-2 bg-black text-white rounded-md flex items-center justify-center">
-            <span className="text-sm tracking-widest">GET STARTED</span>
-            <span className="ml-2 mb-1">&rarr;</span>
-          </button>
+          <a href="/appCashCare" download>
+            <div className="mt-5 pl-8 pr-6 py-2 bg-black text-white rounded-full flex items-center justify-center">
+              <span>Download</span>
+              <span className="ml-4 text-white">&#8595;</span>
+            </div>
+          </a>
         </main>
       </div>
     </>
